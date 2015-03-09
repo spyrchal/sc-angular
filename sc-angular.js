@@ -14,14 +14,60 @@
 .factory('scService', function ($http, $cacheFactory, scConnection) {
     var mxlAutoCompleteCache = $cacheFactory('mxlAutoCompleteCache');
 
+    function getAuthorizationHeader() {
+        return { Authorization: 'Basic ' + btoa(scConnection.userName + ':' + scConnection.password) };
+    }
+    function getFullUrl(urlPart) {
+
+        function combinePaths(str1, str2) {
+            if (str1.charAt(str1.length - 1) === '/') {
+                str1 = str1.substr(0, str1.length - 1);
+            }
+
+            if (str2.charAt(0) === '/') {
+                str2 = str2.substr(1, baseUri.length - 1);
+            }
+
+            return str1 + '/' + str2;
+        }
+
+        var uri = combinePaths(scConnection.baseUri, 'api/' + scConnection.apiVersion);
+        return combinePaths(uri, urlPart);
+    }
+
+    function mxlRequest(httpMethod, mxlMethod, workspaceId, expression, parameterDefinitions) {
+        var payload = {};
+        if (expression) {
+            payload.expression = expression;
+        }
+        if (parameterDefinitions) {
+            payload.parameterDefinitions = parameterDefinitions;
+        }
+        return scRequest(httpMethod, (workspaceId ? 'workspaces/' + workspaceId + '/mxl' : 'mxl'), { method: mxlMethod }, payload);
+    }
+
+    function scRequest(httpMethod, scUrl, params, data, error) {
+        var promise = $http({
+            headers: getAuthorizationHeader(),
+            url: getFullUrl(scUrl),
+            method: httpMethod,
+            params: params,
+            data: data
+        });
+
+        return promise;
+    }
+
     return {
-        getAutoCompletionHints: function (workspaceId) {            
+        mxlAutoComplete: function (workspaceId) {
             workspaceId = (workspaceId === undefined) ? null : workspaceId;
             var cachedHints = mxlAutoCompleteCache.get(workspaceId);
 
             if (cachedHints === undefined) {
-                hints = this.scRequest('GET', (workspaceId ? 'workspaces/' + workspaceId + '/mxl' : 'mxl'), { method: 'autoComplete' });
-                mxlAutoCompleteCache.put(workspaceId, hints);
+                hints = mxlRequest('GET', 'autoComplete', workspaceId);
+                mxlAutoCompleteCache.put(workspaceId, hints).then(function (response) {
+                    return response.data;
+                });
                 return hints;
             }
             else {
@@ -29,53 +75,10 @@
             }
         },
         mxlQuery: function (query, workspaceId) {
-            return this.scRequest('POST', (workspaceId ? 'workspaces/' + workspaceId + '/mxl' : 'mxl'), angular.extend({ method: 'query' }, params), { expression: query })
-        },  
-        scRequest: function (httpMethod, scUrl, params, data, error) {
-            var promise = $http({
-                headers: this.getAuthorizationHeader(),
-                url: this.getFullUrl(scUrl),
-                method: httpMethod,
-                params: params,
-                data: data
-            }).then(function (response) {
-                return response.data;
-            }, function (response) {
-                if (error) {
-                    if (angular.isFunction(error)) {
-                        return error(response.data);
-                    } else if (angular.isObject(error)) {
-                        if (error[response.status]) {
-                            return error[response.status](response.data);
-                        } else if (error.default) {
-                            return error.default(response.data);
-                        }
-                    }
-                }
-                return null;
-            });
-
-            return promise;
+            return mxlRequest('POST', 'query', workspaceId, query, null);
         },
-        getAuthorizationHeader: function () {
-            return { Authorization: 'Basic ' + btoa(scConnection.userName + ':' + scConnection.password) };
-        },
-        getFullUrl: function (urlPart) {
-
-            function combinePaths(str1, str2) {
-                if (str1.charAt(str1.length - 1) === '/') {
-                    str1 = str1.substr(0, str1.length - 1);
-                }
-
-                if (str2.charAt(0) === '/') {
-                    str2 = str2.substr(1, baseUri.length - 1);
-                }
-
-                return str1 + '/' + str2;
-            }
-
-            var uri = combinePaths(scConnection.baseUri, 'api/' + scConnection.apiVersion);
-            return combinePaths(uri, urlPart);
+        mxlValidate: function (query, workspaceId) {
+            return mxlRequest('POST', 'validate', workspaceId, query, null);
         }
     }
 });
