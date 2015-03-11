@@ -1,25 +1,19 @@
 ﻿angular.module('sociocortex', [])
 .value('scConnection',
 {
-    baseUri: 'http://localhost:8083/intern/tricia',
+    baseUri: 'http://131.159.30.153/api/0.1',
     apiVersion: '0.1',
-    userName: 'mustermann@test.tricia',
-    password: 'ottto'
+    userName: 'sociocortex.sebis@tum.de',
+    password: 'sebis'
 })
-
-//baseUri: 'http://131.159.30.153/api/0.1',
-//userName: 'sociocortex.sebis@tum.de',   
-//password: 'sebis'
-
 .factory('scService', function ($http, $cacheFactory, scConnection) {
     var mxlAutoCompleteCache = $cacheFactory('mxlAutoCompleteCache');
 
-    function getAuthorizationHeader() {
-        return { Authorization: 'Basic ' + btoa(scConnection.userName + ':' + scConnection.password) };
-    }
-    function getFullUrl(urlPart) {
-
-        function combinePaths(str1, str2) {
+    var helper = {
+        getAuthorizationHeader: function () {
+            return { Authorization: 'Basic ' + btoa(scConnection.userName + ':' + scConnection.password) };
+        },
+        combinePaths: function (str1, str2) {
             if (str1.charAt(str1.length - 1) === '/') {
                 str1 = str1.substr(0, str1.length - 1);
             }
@@ -29,42 +23,53 @@
             }
 
             return str1 + '/' + str2;
+        },
+        getFullUrl: function (urlPart) {
+            var uri = this.combinePaths(scConnection.baseUri, 'api/' + scConnection.apiVersion);
+            return this.combinePaths(uri, urlPart);
+        },
+        getUrlPartFromContext: function (context) {
+            if (angular.isObject(context)) {
+                if (context.entityId) {
+                    return "entities/" + context.entityId;
+                }
+                if (context.typeId) {
+                    return "types/" + context.typeId;
+                }
+                if (context.workspaceId) {
+                    return "workspaces/" + context.workspaceId;
+                }
+                return "";
+            }
+
+            return "workspaces/" + context;
+        },
+        scRequest: function (httpMethod, scUrl, params, data) {
+            var promise = $http({
+                headers: this.getAuthorizationHeader(),
+                url: this.getFullUrl(scUrl),
+                method: httpMethod,
+                params: params,
+                data: data
+            });
+
+            return promise;
+        },
+        mxlRequest: function (httpMethod, context, mxlMethod, mxlMethodParameters) {
+            if (!angular.isObject(mxlMethodParameters)) {
+                mxlMethodParameters = { expression: mxlMethodParameters };
+            }
+
+            return this.scRequest(httpMethod, this.combinePaths(this.getUrlPartFromContext(context), "mxl"), { method: mxlMethod }, mxlMethodParameters);
         }
-
-        var uri = combinePaths(scConnection.baseUri, 'api/' + scConnection.apiVersion);
-        return combinePaths(uri, urlPart);
-    }
-
-    function mxlRequest(httpMethod, mxlMethod, workspaceId, expression, parameterDefinitions) {
-        var payload = {};
-        if (expression) {
-            payload.expression = expression;
-        }
-        if (parameterDefinitions) {
-            payload.parameterDefinitions = parameterDefinitions;
-        }
-        return scRequest(httpMethod, (workspaceId ? 'workspaces/' + workspaceId + '/mxl' : 'mxl'), { method: mxlMethod }, payload);
-    }
-
-    function scRequest(httpMethod, scUrl, params, data, error) {
-        var promise = $http({
-            headers: getAuthorizationHeader(),
-            url: getFullUrl(scUrl),
-            method: httpMethod,
-            params: params,
-            data: data
-        });
-
-        return promise;
-    }
+    };
 
     return {
         mxlAutoComplete: function (workspaceId) {
-            workspaceId = (workspaceId === undefined) ? null : workspaceId;
             var cachedHints = mxlAutoCompleteCache.get(workspaceId);
 
             if (cachedHints === undefined) {
-                hints = mxlRequest('GET', 'autoComplete', workspaceId);
+                hints = helper.mxlRequest('GET', { workspaceId: workspaceId }, 'autoComplete');
                 mxlAutoCompleteCache.put(workspaceId, hints).then(function (response) {
                     return response.data;
                 });
@@ -74,11 +79,11 @@
                 return cachedHints;
             }
         },
-        mxlQuery: function (query, workspaceId) {
-            return mxlRequest('POST', 'query', workspaceId, query, null);
+        mxlQuery: function (mxlMethodParameters, context) {
+            return helper.mxlRequest('POST', context, 'query', mxlMethodParameters);
         },
-        mxlValidate: function (query, workspaceId) {
-            return mxlRequest('POST', 'validate', workspaceId, query, null);
+        mxlValidate: function (mxlMethodParameters, context) {
+            return helper.mxlRequest('POST', context, 'validate', mxlMethodParameters);
         }
     }
 });
