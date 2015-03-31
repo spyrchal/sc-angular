@@ -1,7 +1,7 @@
 ﻿angular.module('sociocortex', [])
 .value('scConnection',
 {
-    baseUri: 'http://131.159.30.153/api/0.1',
+    baseUri: 'http://131.159.30.153',
     apiVersion: '0.1',
     userName: 'sociocortex.sebis@tum.de',
     password: 'sebis'
@@ -84,6 +84,9 @@
         },
         mxlValidate: function (mxlMethodParameters, context) {
             return helper.mxlRequest('POST', context, 'validate', mxlMethodParameters);
+        },
+        getEntities: function () {
+            return helper.scRequest('GET', 'entities');
         }
     }
 });
