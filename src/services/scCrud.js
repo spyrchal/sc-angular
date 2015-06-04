@@ -1,5 +1,6 @@
 (function () {
     var PATH_ATTRIBUTES = 'attributes',
+        PATH_ENTITIES = 'entities',
         PATH_GROUPS = 'groups',
         PATH_USERS = 'users',
         PATH_TYPES = 'types',
@@ -7,17 +8,26 @@
     
     angular.module('sociocortex').service('scCrud', ['$q', 'scCore', function scCrudService($q, scCore) {        
         return {
-            types: {
-                findAll: findAllTypes,
-                findOne: findOneType
+            entities: {
+                findAll: findAllEntities
             },
             groups: {
                 findAll: findAllGroups
             },
             users: {
                 findAll: findAllUsers
+            },
+            types: {
+                findAll: findAllTypes,
+                findOne: findOneType
             }
         };
+        
+        function findAllEntities(auth, typeId) {
+            // for performance reasons, you should't call this w/o a typeId filter (takes ages to finish)
+            var path = angular.isString(typeId) ? PATH_TYPES + '/' + typeId + '/' + PATH_ENTITIES : PATH_ENTITIES;
+            return genericFindAll(auth, path);
+        }
         
         function findAllGroups(auth) {
             return genericFindAll(auth, PATH_GROUPS);

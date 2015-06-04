@@ -8,13 +8,34 @@ describe('scCrud', function () {
   beforeEach(function () {  
     tester = ngMidwayTester('sociocortex');
     scCrud = tester.inject('scCrud');
+    
     auth = { user: 'sociocortex.sebis@tum.de', password: 'sebis' };
-    validTypeId = '142g3fee1mm5m';
+    validTypeId = '18mf8ga1kc56b'; // Northwind -> Product; expected to have >= 1 instance
   });
   
   afterEach(function() {
     tester.destroy();
     tester = null;
+  });
+  
+  describe('entities', function () {
+    describe('#findAll', function () {
+      it('returns returns a sane array of entities if passed valid auth details and a valid type id', function (done) {
+        scCrud.entities.findAll(auth, validTypeId)
+        .then(function success(res) {
+            expect(res).toBeDefined();
+            expect(angular.isArray(res)).toBe(true);
+            expect(res.length).toBeGreaterThan(0);
+            expect(res[0].id).toEqual(jasmine.any(String));
+            expect(res[0].type).toBeDefined();
+            expect(res[0].type.uid).toBeDefined();
+            expect(res[0].type.uid).toEqual('types/' + validTypeId);
+          }, function error() {
+            fail('should not reject the promise');
+          })
+        .finally(done);
+      });
+    });
   });
   
   describe('groups', function () {

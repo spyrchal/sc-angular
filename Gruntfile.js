@@ -11,7 +11,7 @@ module.exports = function(grunt) {
         banner: '<%= banner %>',
         // remove tsd and jshint annotations
         stripBanners: { block: true, line: true },
-        sourceMap: true
+        sourceMap: false
       },
       dist: {
         src: ['src/**/*.js'],
@@ -21,7 +21,7 @@ module.exports = function(grunt) {
     uglify: {
       options: {
         banner: '<%= banner %>',
-        sourceMap: true
+        sourceMap: false
       },
       dist: {
         src: '<%= concat.dist.dest %>',
