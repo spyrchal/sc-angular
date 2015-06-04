@@ -130,10 +130,10 @@ describe('scCrud', function () {
             expect(res.length).toBeGreaterThan(0);
             expect(res[0].attributes).toBeDefined();
             expect(angular.isArray(res[0].attributes)).toBe(true);
+            done();
           }, function error() {
             fail('should not reject the promise');
-          })
-        .finally(done);
+          });
       });
     });
     
@@ -165,17 +165,34 @@ describe('scCrud', function () {
   
   describe('users', function () {
     describe('#findAll', function () {
-      it('returns returns an array of objects if passed valid auth details', function (done) {
+      it('returns an array of objects if passed valid auth details', function (done) {
         scCrud.users.findAll(auth)
         .then(function success(res) {
             expect(res).toBeDefined();
             expect(angular.isArray(res)).toBe(true);
             expect(res.length).toBeGreaterThan(0);
-            expect(res[0].picture).toEqual(jasmine.any(String));
-            expect(res[0].id).toEqual(jasmine.any(String));
             expect(res[0].email).toEqual(jasmine.any(String));
-            expect(res[0].name).toEqual(jasmine.any(String));
             expect(res[0].groups).toEqual(jasmine.any(Array));
+            expect(res[0].id).toEqual(jasmine.any(String));
+            expect(res[0].name).toEqual(jasmine.any(String));
+            expect(res[0].picture).toEqual(jasmine.any(String));
+          }, function error() {
+            fail('should not reject the promise');
+          })
+        .finally(done);
+      });
+    });
+    
+    describe('#findSelf', function () {
+      it('returns the user that owns the passed auth details', function (done) {
+        scCrud.users.findSelf(auth)
+        .then(function success(res) {
+            expect(res).toBeDefined();
+            expect(res.email).toEqual(auth.user);
+            expect(res.groups).toEqual(jasmine.any(Array));
+            expect(res.id).toEqual(jasmine.any(String));
+            expect(res.name).toEqual(jasmine.any(String));
+            expect(res.picture).toEqual(jasmine.any(String));
           }, function error() {
             fail('should not reject the promise');
           })

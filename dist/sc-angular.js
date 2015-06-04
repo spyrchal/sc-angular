@@ -126,7 +126,8 @@
                 findAll: findAllGroups
             },
             users: {
-                findAll: findAllUsers
+                findAll: findAllUsers,
+                findSelf: findOwnUser
             },
             types: {
                 findAll: findAllTypes,
@@ -211,8 +212,14 @@
             return genericFind(auth, PATH_GROUPS);
         }
         
+        
+        // USERS
         function findAllUsers(auth) {
             return genericFind(auth, PATH_USERS);
+        }
+        
+        function findOwnUser(auth) {
+            return genericFind(auth, PATH_USERS + '/me');
         }
         
         
@@ -232,7 +239,10 @@
                         currTypeId = resTypes[i].id;
                         promises.push(findTypeAttributes(auth, currTypeId));
                     }
+//                    console.log('restypes', resTypes);
+////                    console.log('promises set', promises);
                     $q.all(promises).then(function resolveAttributesOfTypes(attributeCollection) {
+//                        console.debug('promises fullfilled', attributeCollection);
                         for (i = 0; i < resTypes.length; i++) {
                             resTypes[i].attributes = attributeCollection[i].data;
                         }
