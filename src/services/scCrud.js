@@ -31,7 +31,7 @@
         
         // ENTITIES
         function findAllEntities(auth, typeId) {
-            // for performance reasons, one should't call this w/o a typeId filter (takes ages to finish)
+            // for performance reasons, one shouldn't call this w/o a typeId filter (takes ages to finish)
             var path = angular.isString(typeId) ? PATH_TYPES + '/' + typeId + '/' + PATH_ENTITIES : PATH_ENTITIES;
             return genericFind(auth, path);
         }
@@ -132,10 +132,8 @@
                         currTypeId = resTypes[i].id;
                         promises.push(findTypeAttributes(auth, currTypeId));
                     }
-//                    console.log('restypes', resTypes);
-////                    console.log('promises set', promises);
+
                     $q.all(promises).then(function resolveAttributesOfTypes(attributeCollection) {
-//                        console.debug('promises fullfilled', attributeCollection);
                         for (i = 0; i < resTypes.length; i++) {
                             resTypes[i].attributes = attributeCollection[i].data;
                         }
