@@ -104,12 +104,14 @@
 })();
 
 (function () {
-    angular.module('sociocortex').service('scCrud', ['scCore', function scCrudService(scCore) {
+    angular.module('sociocortex').service('scCrud', ['scCore', function scCrudService(scCore) {        
         return {
-            findTypes: findTypes
+            types: {
+                findAll: findAllTypes
+            }
         };
         
-        function findTypes(auth) {
+        function findAllTypes(auth) {
             return scCore.scRequest({
                 httpMethod: 'GET',
                 path: 'types',
