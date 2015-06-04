@@ -11,24 +11,49 @@
         };
         
         function findAllGroups(auth) {
-            return scCore.scRequest({
-                httpMethod: 'GET',
-                path: 'groups',
-                auth: auth
+            return $q(function performFindAllGroups(resolve, reject) {
+                scCore.scRequest({
+                    httpMethod: 'GET',
+                    path: 'groups',
+                    auth: auth
+                }).then(function (res) {
+                    return resolve(res.data);
+                }, reject);
             });
         }
         
-        function findAllTypes(auth, workspaceId) {
-            var path = angular.isString(workspaceId) ? 'workspaces/' + workspaceId + '/types' : 'types';
-            
-            return scCore.scRequest({
-                httpMethod: 'GET',
-                path: path,
-                auth: auth
+        function findAllTypes(auth, workspaceId, includeAttributes) {
+            return $q(function performFindAllTypes(resolve, reject) {
+                var path = angular.isString(workspaceId) ? 'workspaces/' + workspaceId + '/types' : 'types';
+                
+                scCore.scRequest({
+                    httpMethod: 'GET',
+                    path: path,
+                    auth: auth
+                }).then(function (res) {
+                    var resTypes = res.data;
+                    
+                    if (!includeAttributes) {
+                        return resolve(resTypes);
+                    }
+                    
+                    // resolve attributes (which may lead to a significant number of API calls)
+                    var promises = [], currTypeId;
+                    for (var i = 0; i < resTypes.length; i++) {
+                        currTypeId = resTypes[i].id;
+                        promises.push(findTypeAttributes(auth, currTypeId));
+                    }
+                    $q.all(promises).then(function (attributeCollection) {
+                        for (i = 0; i < resTypes.length; i++) {
+                            resTypes[i].attributes = attributeCollection[i].data;
+                        }
+                        return resolve(resTypes);
+                    }, reject);
+                }, reject);
             });
         }
         
-        function findOneType(auth, typeId) {
+        function findOneType(auth, typeId, includeAttributes) {
             return $q(function performFindOneType(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -40,7 +65,26 @@
                     httpMethod: 'GET',
                     path: 'types/' + typeId,
                     auth: auth
-                }).then(resolve, reject);
+                }).then(function (res) {
+                    if (!includeAttributes) {
+                        return resolve(res.data);
+                    }
+                    
+                    // resolve attributes
+                    var resType = res.data;
+                    findTypeAttributes(auth, typeId).then(function (res) {
+                        resType.attributes = res.data;
+                        return resolve(resType);
+                    }, reject);
+                }, reject);
+            });
+        }
+        
+        function findTypeAttributes(auth, typeId) {
+            return scCore.scRequest({
+                httpMethod: 'GET',
+                path: 'types/' + typeId + '/attributes',
+                auth: auth
             });
         }
         
