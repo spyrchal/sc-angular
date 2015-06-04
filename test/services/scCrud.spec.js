@@ -89,7 +89,28 @@ describe('scCrud', function () {
         .then(function success(res) {
             expect(res).toBeDefined();
             expect(res.attributes).toBeDefined();
-            expect(angular.isArray(res.attributes)).toBe(true);
+            expect(res.attributes).toEqual(jasmine.any(Array));
+          }, function error() {
+            fail('should not reject the promise');
+          })
+        .finally(done);
+      });
+    });
+  });
+  
+  describe('users', function () {
+    describe('#findAll', function () {
+      it('returns returns an array of objects if passed valid auth details', function (done) {
+        scCrud.users.findAll(auth)
+        .then(function success(res) {
+            expect(res).toBeDefined();
+            expect(angular.isArray(res)).toBe(true);
+            expect(res.length).toBeGreaterThan(0);
+            expect(res[0].picture).toEqual(jasmine.any(String));
+            expect(res[0].id).toEqual(jasmine.any(String));
+            expect(res[0].email).toEqual(jasmine.any(String));
+            expect(res[0].name).toEqual(jasmine.any(String));
+            expect(res[0].groups).toEqual(jasmine.any(Array));
           }, function error() {
             fail('should not reject the promise');
           })
