@@ -1,0 +1,39 @@
+{
+  "name": "sc-angular",
+  "version": "0.2.0",
+  "description": "TODO",
+  "repository": {
+    "type": "git",
+    "url": "https://bitbucket.org/sebischair/sc-angular.git"
+  },
+  "keywords": [
+    "angular",
+    "sebis",
+    "sociocortex"
+  ],
+  "author": {
+    "name": "Sebis",
+    "url": "https://wwwmatthes.in.tum.de"
+  },
+  "contributors": [{
+    "name": "Thomas Reschenhofer",
+    "email": "thomas.reschenhofer@tum.de",
+    "url": "https://wwwmatthes.in.tum.de/pages/gbocu2jbwx6a/Thomas-Reschenhofer"
+  },{
+    "name": "Patrick Buergin",
+    "email": "patrick.buergin@tum.de",
+    "url": "http://patrickbuergin.com"
+  }],
+  "license": "Sebis Proprietary",
+  "bugs": {
+    "url": "https://bitbucket.org/sebischair/sc-angular/issues"
+  },
+  "homepage": "https://bitbucket.org/sebischair/sc-angular",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-clean": "^0.6.0",
+    "grunt-contrib-concat": "~0.4.0",
+    "grunt-contrib-jshint": "~0.10.0",
+    "grunt-contrib-uglify": "~0.5.0"
+  }
+}
