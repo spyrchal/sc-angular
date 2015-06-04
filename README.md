@@ -15,6 +15,8 @@ TODO
 
 ### Build
     npm install
+    npm install -g bower
+    bower install
     npm install -g grunt
     npm install -g grunt-cli
     grunt

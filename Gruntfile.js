@@ -54,6 +54,13 @@ module.exports = function(grunt) {
       gruntfile: {
         src: 'Gruntfile.js'
       }
+    },
+    karma: {
+      unit: {
+        configFile: 'karma.conf.js',
+        singleRun: true,
+        reporters: ['dots']
+      }
     }
   });
 
@@ -61,7 +68,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-karma');
 
+  grunt.registerTask('test', ['karma']);
   grunt.registerTask('build', ['concat', 'uglify']);
-  grunt.registerTask('default', ['jshint', 'build']);
+  grunt.registerTask('default', ['jshint', 'test', 'build']);
 };
