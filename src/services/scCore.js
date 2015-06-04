@@ -1,3 +1,4 @@
+/// <reference path="../../typings/angularjs/angular.d.ts"/>
 (function () {
     angular.module('sociocortex').service('scCore', ['$http', '$q', 'scConnection', function scCore($http, $q, scConnection) {
         return {
@@ -34,17 +35,19 @@
         }
 
         function mxlRequest(options) {
-            var mxlMethodParameters = null;
-            if (!angular.isObject(options.mxlMethodParameters)) {
-                mxlMethodParameters = { expression: options.mxlMethodParameters };
-            }
-
-            return scRequest({
-                httpMethod: options.httpMethod,
-                path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
-                auth: options.auth,
-                params: { method: options.mxlMethod },
-                data: mxlMethodParameters
+            return $q(function performMxlRequest(resolve, reject) {
+                var mxlMethodParameters = null;
+                if (!angular.isObject(options.mxlMethodParameters)) {
+                    mxlMethodParameters = { expression: options.mxlMethodParameters };
+                }
+    
+                return scRequest({
+                    httpMethod: options.httpMethod,
+                    path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
+                    auth: options.auth,
+                    params: { method: options.mxlMethod },
+                    data: mxlMethodParameters
+                }).then(resolve, reject);
             });
         }
     

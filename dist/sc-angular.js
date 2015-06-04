@@ -49,17 +49,19 @@
         }
 
         function mxlRequest(options) {
-            var mxlMethodParameters = null;
-            if (!angular.isObject(options.mxlMethodParameters)) {
-                mxlMethodParameters = { expression: options.mxlMethodParameters };
-            }
-
-            return scRequest({
-                httpMethod: options.httpMethod,
-                path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
-                auth: options.auth,
-                params: { method: options.mxlMethod },
-                data: mxlMethodParameters
+            return $q(function performMxlRequest(resolve, reject) {
+                var mxlMethodParameters = null;
+                if (!angular.isObject(options.mxlMethodParameters)) {
+                    mxlMethodParameters = { expression: options.mxlMethodParameters };
+                }
+    
+                return scRequest({
+                    httpMethod: options.httpMethod,
+                    path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
+                    auth: options.auth,
+                    params: { method: options.mxlMethod },
+                    data: mxlMethodParameters
+                }).then(resolve, reject);
             });
         }
     
@@ -122,7 +124,7 @@
 })();
 
 (function () {
-    angular.module('sociocortex').service('scMxl', ['$cacheFactory', 'scCore', function scMxlService($cacheFactory, scCore) {
+    angular.module('sociocortex').service('scMxl', ['$cacheFactory', '$q', 'scCore', function scMxlService($cacheFactory, $q, scCore) {
         var autoCompleteCache = $cacheFactory('mxlAutoCompleteCache');
         
         return {
@@ -132,23 +134,23 @@
         };
         
         function autoComplete(workspaceId, auth) {
-            var cachedHints = autoCompleteCache.get(workspaceId);
-
-            if (cachedHints === undefined) {
-                var hints = scCore.mxlRequest({
+            return $q(function performAutoComplete(resolve, reject) {
+                var cachedHints = autoCompleteCache.get(workspaceId);
+    
+                if (cachedHints) {
+                    return resolve(cachedHints);
+                }
+    
+                scCore.mxlRequest({
                     httpMethod: 'GET',
                     auth: auth,
                     context: { workspaceId: workspaceId },
                     mxlMethod: 'autoComplete'
-                });
-                autoCompleteCache.put(workspaceId, hints).then(function (response) {
-                    return response.data;
-                });
-                return hints;
-            }
-            else {
-                return cachedHints;
-            }
+                }).then(function processMxlResponse(hints) {
+                    autoCompleteCache.put(workspaceId, hints);
+                    return resolve(hints);
+                }, reject);
+            });
         };
         
         function query(mxlMethodParameters, context, auth) {
