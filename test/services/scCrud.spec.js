@@ -3,14 +3,20 @@
 /* global ngMidwayTester */
 
 describe('scCrud', function () {
-  var tester, scCrud, auth, validTypeId;
+  var tester, scCrud, auth, validWorkspaceId, validTypeId, validEntityId, validEntityData;
   
   beforeEach(function () {  
     tester = ngMidwayTester('sociocortex');
     scCrud = tester.inject('scCrud');
     
     auth = { user: 'sociocortex.sebis@tum.de', password: 'sebis' };
-    validTypeId = '18mf8ga1kc56b'; // Northwind -> Product; expected to have >= 1 instance
+    validWorkspaceId = 'mdx13m1l54mx'; // sc-angular-test
+    validTypeId = '19iyxwraho1hf'; // sc-angular-test -> test-type; expected to have >= 1 instance
+    validEntityId = 'ge28t9ra855w'; // sc-angular-test -> test-type -> <entitiy>; expected to exist
+    // entity data to be used when trying to create a new entity
+    validEntityData = {
+      'test-attribute': 'testtesttest!',
+    };
   });
   
   afterEach(function() {
@@ -35,6 +41,44 @@ describe('scCrud', function () {
           })
         .finally(done);
       });
+    });
+    
+    // not yet provided by the API
+    describe('#findOne', function () {
+      xit('returns returns a single entity when passed valid auth details and a valid id', function (done) {
+        scCrud.entities.findAll(auth, validEntityId)
+        .then(function success(res) {
+            expect(res).toBeDefined();
+            expect(angular.isObject(res)).toBe(true);
+            expect(res.id).toEqual(validEntityId);
+          }, function error() {
+            fail('should not reject the promise');
+          })
+        .finally(done);
+      });
+    });
+    
+    describe('#create', function () {
+      xit('creates an entity, if provided valid auth details and valid entity data', function (done) {
+        scCrud.entities.create(auth, validWorkspaceId, validEntityData)
+        .then(function success(res) {
+            expect(res).toBeDefined();
+            expect(res).toBeUndefined();
+            // TODO
+          }, function error(err) {
+            expect(err).toBeUndefined();
+            fail('should not reject the promise');
+          })
+        .finally(done);
+      });
+    });
+    
+    describe('#update', function () {
+      // TODO
+    });
+    
+    describe('#remove', function () {
+      // TODO
     });
   });
   
