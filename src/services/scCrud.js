@@ -25,6 +25,9 @@
             types: {
                 findAll: findAllTypes,
                 findOne: findOneType
+            },
+            workspaces: {
+                findAll: findAllWorkspaces
             }
         };
         
@@ -192,6 +195,12 @@
                 path: PATH_TYPES + '/' + typeId + '/' + PATH_ATTRIBUTES,
                 auth: auth
             });
+        }
+        
+        
+        // WORKSPACES
+        function findAllWorkspaces(auth) {
+            return genericFind(auth, PATH_WORKSPACES);
         }
         
         

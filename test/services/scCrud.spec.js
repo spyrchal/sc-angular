@@ -235,4 +235,23 @@ describe('scCrud', function () {
       });
     });
   });
+  
+  describe('workspaces', function () {
+    describe('#findAll', function () {
+      it('returns returns an array of objects if passed valid auth details', function (done) {
+        scCrud.workspaces
+        .findAll(auth)
+        .then(function success(res) {
+          expect(res).toBeDefined();
+          expect(angular.isArray(res)).toBe(true);
+          expect(res.length).toBeGreaterThan(0);
+          expect(res[0].id).toEqual(jasmine.any(String));
+          expect(res[0].name).toEqual(jasmine.any(String));
+        }, function error() {
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+    });
+  });
 });

@@ -44,8 +44,6 @@
                     });     
                 }
                 
-                console.debug(options.httpMethod + ' ' + getFullUrl(options.path));
-                
                 var headers = getHeaders(options.auth.user, options.auth.password);
                 
                 return $http({
@@ -76,8 +74,7 @@
     
         function getHeaders(user, password) {
             return {
-                Authorization: 'Basic ' + window.btoa(user + ':' + password),
-                'X-Requested-With': 'sc-angular'
+                Authorization: 'Basic ' + window.btoa(user + ':' + password)
             };
         }
         
@@ -144,6 +141,9 @@
             types: {
                 findAll: findAllTypes,
                 findOne: findOneType
+            },
+            workspaces: {
+                findAll: findAllWorkspaces
             }
         };
         
@@ -311,6 +311,12 @@
                 path: PATH_TYPES + '/' + typeId + '/' + PATH_ATTRIBUTES,
                 auth: auth
             });
+        }
+        
+        
+        // WORKSPACES
+        function findAllWorkspaces(auth) {
+            return genericFind(auth, PATH_WORKSPACES);
         }
         
         

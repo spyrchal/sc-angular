@@ -32,7 +32,7 @@ TODO
 
     scMxl
     .query(auth, queryString, workspaceId)
-    .then(function (...`
+    .then(function (...
 
 ### Build
     npm install
