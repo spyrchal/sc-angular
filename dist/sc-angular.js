@@ -7,10 +7,16 @@
 (function () {
     angular.module('sociocortex', []);
     
+    var SC_HOSTNAME = '131.159.30.153',
+        SC_BASEURI = 'http://' + SC_HOSTNAME;
     angular.module('sociocortex').value('scConnection', {
-        baseUri: 'http://131.159.30.153',
+        baseUri: SC_BASEURI,
         apiVersion: '0.1'
     });
+    
+    angular.module('sociocortex').config(['$sceDelegateProvider', function ($sceDelegateProvider) {
+        $sceDelegateProvider.resourceUrlWhitelist(['self', SC_BASEURI + '/api/**' ]);
+    }]);
 })();
 
 (function () {
@@ -37,9 +43,13 @@
                         message: 'invalid options argument'
                     });     
                 }
-                    
+                
+                console.debug(options.httpMethod + ' ' + getFullUrl(options.path));
+                
+                var headers = getHeaders(options.auth.user, options.auth.password);
+                
                 return $http({
-                    headers: getAuthorizationHeader(options.auth.user, options.auth.password),
+                    headers: headers,
                     url: getFullUrl(options.path),
                     method: options.httpMethod,
                     params: options.params,
@@ -64,8 +74,11 @@
             });
         }
     
-        function getAuthorizationHeader(user, password) {
-            return { Authorization: 'Basic ' + window.btoa(user + ':' + password) };
+        function getHeaders(user, password) {
+            return {
+                Authorization: 'Basic ' + window.btoa(user + ':' + password),
+                'X-Requested-With': 'sc-angular'
+            };
         }
         
         function combinePaths(str1, str2) {
@@ -146,15 +159,35 @@
             return genericFindOne(auth, PATH_ENTITIES, entityId);
         }
         
-        function createEntity(auth, workspaceId, entityData) {
+        function validateEntityAttributes(attributes) {
+            var attribute;
+            for (var i = 0; i < attributes.length; i++) {
+                attribute = attributes[i];
+                if (!angular.isArray(attribute.values) ||
+                    !angular.isString(attribute.name) ||
+                    !angular.isString(attribute.type)) {
+                    return false;        
+                }
+            }
+            return true;
+        }
+        
+        function createEntity(auth, workspaceId, typeId, entityData) {
             return $q(function performCreateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
                     [ workspaceId, angular.isString, 'workspaceId is a string' ],
-                    [ entityData, angular.isObject, 'entity is an object' ],
-                    [ entityData.name, angular.isString, 'entity.name is a string' ]
+                    [ typeId, angular.isString, 'typeId is a string' ],
+                    [ entityData, angular.isObject, 'entityData is an object' ],
+                    [ entityData.name, angular.isString, 'entityData.name is a string' ],
+                    [ entityData.attributes, angular.isArray, 'entityData.attributes is an array' ],
+                    [ entityData.attributes, validateEntityAttributes, 'attributes are 3-tuples of name, values, type' ]
                 ]);
                 if (err) { return reject(err); }
+                
+                entityData.type = {
+                    uid: PATH_TYPES + '/' + typeId,
+                };
                 
                 entityData.workspace = {
                     uid: PATH_WORKSPACES + '/' + workspaceId,
@@ -166,9 +199,7 @@
                     path: PATH_ENTITIES,
                     data: entityData
                 }).then(function (res) {
-                    // TODO
-                    console.debug('creation successful', res);
-                    resolve(true);
+                    resolve(res.data);
                 }, reject);
             });
         }
@@ -181,6 +212,7 @@
                     [ entity.uid, angular.Object, 'entity has a uid' ],
                     [ entity.name, angular.String, 'entity has a name' ],
                     [ entity.workspace, angular.Object, 'entity has a workspace' ],
+                    [ entity.attributes, angular.isArray, 'entity.attributes is an array' ]
                 ]);
                 if (err) { return reject(err); }
                 
@@ -190,18 +222,20 @@
                     path: PATH_ENTITIES + '/' + entity.id,
                     data: entity
                 }).then(function (res) {
-                    // TODO
-                    console.debug('update successful', res);
-                    resolve(true);
+                    resolve(res.data);
                 }, reject);
             });
         }
         
         function removeEntity(auth, entity) {
-            return scCore.scRequest({
-                httpMethod: 'DELETE',
-                auth: auth,
-                path: PATH_ENTITIES + '/' + entity.id
+            return $q(function performRemoveEntity(resolve, reject) {
+                scCore.scRequest({
+                    httpMethod: 'DELETE',
+                    auth: auth,
+                    path: PATH_ENTITIES + '/' + entity.id
+                }).then(function (res) {
+                    resolve(true);
+                }, reject);
             });
         }
         

@@ -23,9 +23,11 @@
                         message: 'invalid options argument'
                     });     
                 }
-                    
+                
+                var headers = getHeaders(options.auth.user, options.auth.password);
+                
                 return $http({
-                    headers: getAuthorizationHeader(options.auth.user, options.auth.password),
+                    headers: headers,
                     url: getFullUrl(options.path),
                     method: options.httpMethod,
                     params: options.params,
@@ -50,8 +52,10 @@
             });
         }
     
-        function getAuthorizationHeader(user, password) {
-            return { Authorization: 'Basic ' + window.btoa(user + ':' + password) };
+        function getHeaders(user, password) {
+            return {
+                Authorization: 'Basic ' + window.btoa(user + ':' + password)
+            };
         }
         
         function combinePaths(str1, str2) {

@@ -3,6 +3,7 @@ TODO
 
 ### Usage
     /dist/sc-angular.js
+    OR
     /dist/sc-angular.min.js
     
 (...) exposes angular services: `scCore`, `scCrud`, `scMxl`.
@@ -11,8 +12,27 @@ TODO
 (...) `auth = { user: String, password: String }`
 
 #### API
-(...) `scCrud.types.findAll(auth).then(function (...`
-(...) `scMxl.query(auth, queryString, workspaceId).then(...`
+(...)
+
+##### Examples
+
+    scCrud.users
+    .findSelf(auth)
+    .then(function (...
+
+    scCrud.types
+    .findAll(auth)
+    .then(function (...
+    
+    scCrud.entities
+    .remove(auth, entity)
+    .then(function (...
+
+(...)
+
+    scMxl
+    .query(auth, queryString, workspaceId)
+    .then(function (...`
 
 ### Build
     npm install
