@@ -50,9 +50,8 @@
 
         function mxlRequest(options) {
             return $q(function performMxlRequest(resolve, reject) {
-                var mxlMethodParameters = null;
                 if (!angular.isObject(options.mxlMethodParameters)) {
-                    mxlMethodParameters = { expression: options.mxlMethodParameters };
+                    options.mxlMethodParameters = { expression: options.mxlMethodParameters || '' };
                 }
     
                 return scRequest({
@@ -60,7 +59,7 @@
                     path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
                     auth: options.auth,
                     params: { method: options.mxlMethod },
-                    data: mxlMethodParameters
+                    data: options.mxlMethodParameters
                 }).then(resolve, reject);
             });
         }
@@ -349,7 +348,7 @@
             validate: validate
         };
         
-        function autoComplete(workspaceId, auth) {
+        function autoComplete(auth, workspaceId) {
             return $q(function performAutoComplete(resolve, reject) {
                 var cachedHints = autoCompleteCache.get(workspaceId);
     
@@ -367,9 +366,9 @@
                     return resolve(hints);
                 }, reject);
             });
-        };
+        }
         
-        function query(mxlMethodParameters, context, auth) {
+        function query(auth, mxlMethodParameters, context) {
             return scCore.mxlRequest({
                 httpMethod: 'POST',
                 auth: auth,
@@ -377,9 +376,9 @@
                 mxlMethod: 'query',
                 mxlMethodParameters: mxlMethodParameters
             });
-        };
+        }
         
-        function validate(mxlMethodParameters, context, auth) {
+        function validate(auth, mxlMethodParameters, context) {
             return scCore.mxlRequest({
                 httpMethod: 'POST',
                 auth: auth,

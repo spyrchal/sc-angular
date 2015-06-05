@@ -11,7 +11,8 @@ TODO
 (...) `auth = { user: String, password: String }`
 
 #### API
-(...) `scCrud.types.findAll(auth).then(function (...` (...) `scMxl.query(queryString, workspaceId, auth);`
+(...) `scCrud.types.findAll(auth).then(function (...`
+(...) `scMxl.query(auth, queryString, workspaceId).then(...`
 
 ### Build
     npm install

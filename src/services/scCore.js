@@ -36,9 +36,8 @@
 
         function mxlRequest(options) {
             return $q(function performMxlRequest(resolve, reject) {
-                var mxlMethodParameters = null;
                 if (!angular.isObject(options.mxlMethodParameters)) {
-                    mxlMethodParameters = { expression: options.mxlMethodParameters };
+                    options.mxlMethodParameters = { expression: options.mxlMethodParameters || '' };
                 }
     
                 return scRequest({
@@ -46,7 +45,7 @@
                     path: combinePaths(getUrlPartFromContext(options.context), 'mxl'),
                     auth: options.auth,
                     params: { method: options.mxlMethod },
-                    data: mxlMethodParameters
+                    data: options.mxlMethodParameters
                 }).then(resolve, reject);
             });
         }

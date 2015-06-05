@@ -8,7 +8,7 @@
             validate: validate
         };
         
-        function autoComplete(workspaceId, auth) {
+        function autoComplete(auth, workspaceId) {
             return $q(function performAutoComplete(resolve, reject) {
                 var cachedHints = autoCompleteCache.get(workspaceId);
     
@@ -26,9 +26,9 @@
                     return resolve(hints);
                 }, reject);
             });
-        };
+        }
         
-        function query(mxlMethodParameters, context, auth) {
+        function query(auth, mxlMethodParameters, context) {
             return scCore.mxlRequest({
                 httpMethod: 'POST',
                 auth: auth,
@@ -36,9 +36,9 @@
                 mxlMethod: 'query',
                 mxlMethodParameters: mxlMethodParameters
             });
-        };
+        }
         
-        function validate(mxlMethodParameters, context, auth) {
+        function validate(auth, mxlMethodParameters, context) {
             return scCore.mxlRequest({
                 httpMethod: 'POST',
                 auth: auth,
