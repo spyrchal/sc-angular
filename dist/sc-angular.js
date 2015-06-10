@@ -208,13 +208,20 @@
             return $q(function performUpdateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
-                    [ entity, angular.Object, 'entity is an object' ],
-                    [ entity.uid, angular.Object, 'entity has a uid' ],
-                    [ entity.name, angular.String, 'entity has a name' ],
-                    [ entity.workspace, angular.Object, 'entity has a workspace' ],
-                    [ entity.attributes, angular.isArray, 'entity.attributes is an array' ]
+                    [ entity, angular.isObject, 'entity is an object' ],
+                    [ entity.type, angular.isObject, 'type is an object' ],
+                    [ entity.uid, angular.isString, 'entity has a uid' ],
+                    [ entity.name, angular.isString, 'entity has a name' ],
+                    [ entity.workspace, angular.isObject, 'entity has a workspace' ],
+                    [ entity.attributes, angular.isArray, 'entity.attributes is an array' ],
+                    [ entity.attributes, validateEntityAttributes, 'attributes are 3-tuples of name, values, type' ]
                 ]);
                 if (err) { return reject(err); }
+                
+                delete entity.permisions;
+                delete entity.versions;
+                
+                console.debug(entity.type);
                 
                 scCore.scRequest({
                     httpMethod: 'POST',
@@ -366,7 +373,7 @@
                 
                 if (!validator(reference)) {
                     console.trace();
-                    console.error('validation failed', validationSequence);
+                    console.error('validation failed', validationSequence[i]);
                     return {
                         error: 'Invalid Parameter',
                         message: message || 'no details provided'

@@ -1,5 +1,6 @@
 /// <reference path="../../typings/angularjs/angular.d.ts"/>
 /// <reference path="../../typings/jasmine/jasmine.d.ts"/>
+/// <reference path="../../typings/lodash/lodash.d.ts"/>
 /* global inject */
 /* global ngMidwayTester */
 
@@ -75,22 +76,44 @@ describe('scCrud', function () {
           expect(res).toBeDefined();
           expect(res.uid).toEqual(jasmine.any(String));
           expect(res.id).toEqual(jasmine.any(String));
-          expect(res.attributes).toEqual(jasmine.any(Array));
+          expect(res.attributes).toEqual(validEntityData.attributes);
           expect(res.versions).toEqual(jasmine.any(Array));
           expect(res.versions.length).toEqual(1);
           expect(res.type.uid).toContain(validTypeId);
           expect(res.workspace.uid).toContain(validWorkspaceId);
           previouslyCreatedEntity = res;
-          done();
         }, function createError(err) {
           expect(err).toBeUndefined();
           fail('should not reject the promise');
-        });
+        })
+        .finally(done);
       });
     });
     
     describe('#update', function () {
-      // TODO
+      // The resp. API function is broken (see sociocortex/issue/18)
+      xit('is able to change a newly created entity and adds a new version', function (done) {
+        expect(previouslyCreatedEntity).toBeDefined();
+        var changedEntity = _.cloneDeep(previouslyCreatedEntity);
+        changedEntity.attributes[0].values = ['changed'];
+        
+        console.debug(JSON.stringify(changedEntity));
+        
+        scCrud.entities
+        .update(auth, changedEntity)
+        .then(function createSuccess(res) {
+          expect(res).toBeDefined();
+          expect(res.uid).toEqual(previouslyCreatedEntity.uid);
+          expect(res.attributes).toEqual(changedEntity.attributes);
+          expect(res.versions).toEqual(jasmine.any(Array));
+          expect(res.versions.length).toEqual(2);
+          previouslyCreatedEntity = res;
+        }, function createError(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
     });
     
     describe('#remove', function () {
