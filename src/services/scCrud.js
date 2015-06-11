@@ -102,14 +102,9 @@
                     [ entity.attributes, validateEntityAttributes, 'attributes are 3-tuples of name, values, type' ]
                 ]);
                 if (err) { return reject(err); }
-                
-                delete entity.permisions;
-                delete entity.versions;
-                
-                console.debug(entity.type);
-                
+        
                 scCore.scRequest({
-                    httpMethod: 'POST',
+                    httpMethod: 'PUT',
                     auth: auth,
                     path: PATH_ENTITIES + '/' + entity.id,
                     data: entity

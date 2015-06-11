@@ -25,7 +25,7 @@ describe('scCrud', function () {
       }]
     };
   });
-  
+
   afterEach(function() {
     tester.destroy();
     tester = null;
@@ -44,7 +44,8 @@ describe('scCrud', function () {
           expect(res[0].type).toBeDefined();
           expect(res[0].type.uid).toBeDefined();
           expect(res[0].type.uid).toEqual('types/' + validTypeId);
-        }, function error() {
+        }, function error(err) {
+          expect(err).toBeUndefined();
           fail('should not reject the promise');
         })
         .finally(done);
@@ -53,14 +54,14 @@ describe('scCrud', function () {
     
     // not yet provided by the API
     describe('#findOne', function () {
-      xit('returns returns a single entity when passed valid auth details and a valid id', function (done) {
+      it('returns returns a single entity when passed valid auth details and a valid id', function (done) {
         scCrud.entities
-        .findAll(auth, validEntityId)
+        .findOne(auth, validEntityId)
         .then(function success(res) {
           expect(res).toBeDefined();
-          expect(angular.isObject(res)).toBe(true);
           expect(res.id).toEqual(validEntityId);
-        }, function error() {
+        }, function error(err) {
+          expect(err).toBeUndefined();
           fail('should not reject the promise');
         })
         .finally(done);
@@ -92,12 +93,10 @@ describe('scCrud', function () {
     
     describe('#update', function () {
       // The resp. API function is broken (see sociocortex/issue/18)
-      xit('is able to change a newly created entity and adds a new version', function (done) {
+      it('is able to change a newly created entity and adds a new version', function (done) {
         expect(previouslyCreatedEntity).toBeDefined();
         var changedEntity = _.cloneDeep(previouslyCreatedEntity);
-        changedEntity.attributes[0].values = ['changed'];
-        
-        console.debug(JSON.stringify(changedEntity));
+        changedEntity.attributes[0].values = ['changed', 'a lot'];
         
         scCrud.entities
         .update(auth, changedEntity)
@@ -118,7 +117,7 @@ describe('scCrud', function () {
     
     describe('#remove', function () {
       // API does not support DELETE via CORS yet (see sociocortex/issue/18)
-      xit('can be used to remove a previously created entity', function (done) {
+      it('can be used to remove a previously created entity', function (done) {
         scCrud.entities
         .remove(auth, previouslyCreatedEntity)
         .then(function removeSuccess(success) {

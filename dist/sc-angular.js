@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.2.2
+ * @license sc-angular v0.3
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -217,14 +217,9 @@
                     [ entity.attributes, validateEntityAttributes, 'attributes are 3-tuples of name, values, type' ]
                 ]);
                 if (err) { return reject(err); }
-                
-                delete entity.permisions;
-                delete entity.versions;
-                
-                console.debug(entity.type);
-                
+        
                 scCore.scRequest({
-                    httpMethod: 'POST',
+                    httpMethod: 'PUT',
                     auth: auth,
                     path: PATH_ENTITIES + '/' + entity.id,
                     data: entity
