@@ -2,11 +2,16 @@
 TODO
 
 ### Usage
-    /dist/sc-angular.js
-    OR
-    /dist/sc-angular.min.js
-    
-(...) exposes angular services: `scCore`, `scCrud`, `scMxl`.
+Download either `/dist/sc-angular.js` or `/dist/sc-angular.min.js` from this repository and link it in your `index.html`.
+After that, add the `sc-angular` module as a dependency to your application module:
+
+```javascript
+angular.module('myApp', ['sociocortex']);
+```
+
+The module exposes angular services: `scCore`, `scCrud`, `scMxl`, `scUtil`.
+
+(...)
 
 #### Authentication
 (...) `auth = { user: String, password: String }`
