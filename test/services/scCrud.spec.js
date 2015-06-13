@@ -197,7 +197,6 @@ describe('scCrud', function () {
     });
     
     describe('#update', function () {
-      // The resp. API function is broken (see sociocortex/issue/18)
       it('is able to change a newly created entity and adds a new version', function (done) {
         expect(previouslyCreatedEntity).toBeDefined();
         var changedEntity = _.cloneDeep(previouslyCreatedEntity);
@@ -218,10 +217,32 @@ describe('scCrud', function () {
         })
         .finally(done);
       });
+
+      it('supports the unwrapped attribute notation', function (done) {
+        expect(previouslyCreatedEntity).toBeDefined();
+        var changedEntity = _.cloneDeep(previouslyCreatedEntity);
+        changedEntity.attributes = {
+            'test-attribute': ['changed', 'once', 'more']
+        };
+        
+        scCrud.entities
+        .update(auth, changedEntity, { unwrap: true })
+        .then(function createSuccess(res) {
+          expect(res).toBeDefined();
+          expect(res.uid).toEqual(previouslyCreatedEntity.uid);
+          expect(res.attributes['test-attribute']).toEqual(['changed', 'once', 'more']);
+          expect(res.versions).toEqual(jasmine.any(Array));
+          expect(res.versions.length).toEqual(3);
+          previouslyCreatedEntity = res;
+        }, function createError(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
     });
     
     describe('#remove', function () {
-      // API does not support DELETE via CORS yet (see sociocortex/issue/18)
       it('can be used to remove a previously created entity', function (done) {
         scCrud.entities
         .remove(auth, previouslyCreatedEntity)

@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.4.3
+ * @license sc-angular v0.4.4
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -303,7 +303,13 @@
             return true;
         }
         
-        function createEntity(auth, workspaceId, typeId, entityData) {
+        function createEntity(auth, workspaceId, typeId, entityData, options) {
+            options = angular.isObject(options) ? options : {};
+            
+            if (!angular.isArray(entityData.attributes)) {
+                entityData.attributes = scUtils.wrapAttributes(entityData.attributes);
+            }
+            
             return $q(function performCreateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -330,12 +336,21 @@
                     path: PATH_ENTITIES,
                     data: entityData
                 }).then(function (res) {
-                    resolve(res.data);
+                    if (options.unwrap) {
+                        return resolve(scUtils.unwrapEntity(resolve(res.data)));
+                    }
+                    return resolve(res.data);
                 }, reject);
             });
         }
         
-        function updateEntity(auth, entity) {
+        function updateEntity(auth, entity, options) {
+            options = angular.isObject(options) ? options : {};
+            
+            if (!angular.isArray(entity.attributes)) {
+                entity.attributes = scUtils.wrapAttributes(entity.attributes);
+            }
+            
             return $q(function performUpdateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -355,7 +370,10 @@
                     path: PATH_ENTITIES + '/' + entity.id,
                     data: entity
                 }).then(function (res) {
-                    resolve(res.data);
+                    if (options.unwrap) {
+                        return resolve(scUtils.unwrapEntity(res.data));
+                    }
+                    return resolve(res.data);
                 }, reject);
             });
         }
@@ -636,7 +654,7 @@
                     
                     if (sampleValue === undefined) {
                         attribute.values = [];
-                    } else if (sampleValue instanceof Date) {
+                    } else if (angular.isDate(sampleValue)) {
                         for (var j = 0; j < values.length; j++) {
                             // sociocortex seems to use the german date format: "DD.MM.YYYY"
                             var day = values[j].getDate(),
@@ -648,13 +666,13 @@
                         }
                         attribute.type = 'date';
                         attribute.values = newValues;
-                    } else if (typeof sampleValue === 'number') {
+                    } else if (angular.isNumber(sampleValue)) {
                         for (var j = 0; j < values.length; j++) {
                             newValues.push(values[j].toString());
                         }
                         attribute.type = 'number';
                         attribute.values = newValues;
-                    } else if (typeof sampleValue === 'object' && typeof sampleValue.uid === 'string') {
+                    } else if (angular.isObject(sampleValue) && angular.isString(sampleValue.uid)) {
                         for (var j = 0; j < values.length; j++) {
                             newValues.push({ uid: values[j].uid, name: values[j].name });
                         }

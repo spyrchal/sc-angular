@@ -68,7 +68,7 @@
                     
                     if (sampleValue === undefined) {
                         attribute.values = [];
-                    } else if (sampleValue instanceof Date) {
+                    } else if (angular.isDate(sampleValue)) {
                         for (var j = 0; j < values.length; j++) {
                             // sociocortex seems to use the german date format: "DD.MM.YYYY"
                             var day = values[j].getDate(),
@@ -80,13 +80,13 @@
                         }
                         attribute.type = 'date';
                         attribute.values = newValues;
-                    } else if (typeof sampleValue === 'number') {
+                    } else if (angular.isNumber(sampleValue)) {
                         for (var j = 0; j < values.length; j++) {
                             newValues.push(values[j].toString());
                         }
                         attribute.type = 'number';
                         attribute.values = newValues;
-                    } else if (typeof sampleValue === 'object' && typeof sampleValue.uid === 'string') {
+                    } else if (angular.isObject(sampleValue) && angular.isString(sampleValue.uid)) {
                         for (var j = 0; j < values.length; j++) {
                             newValues.push({ uid: values[j].uid, name: values[j].name });
                         }

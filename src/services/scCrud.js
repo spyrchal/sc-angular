@@ -188,7 +188,13 @@
             return true;
         }
         
-        function createEntity(auth, workspaceId, typeId, entityData) {
+        function createEntity(auth, workspaceId, typeId, entityData, options) {
+            options = angular.isObject(options) ? options : {};
+            
+            if (!angular.isArray(entityData.attributes)) {
+                entityData.attributes = scUtils.wrapAttributes(entityData.attributes);
+            }
+            
             return $q(function performCreateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -215,12 +221,21 @@
                     path: PATH_ENTITIES,
                     data: entityData
                 }).then(function (res) {
-                    resolve(res.data);
+                    if (options.unwrap) {
+                        return resolve(scUtils.unwrapEntity(resolve(res.data)));
+                    }
+                    return resolve(res.data);
                 }, reject);
             });
         }
         
-        function updateEntity(auth, entity) {
+        function updateEntity(auth, entity, options) {
+            options = angular.isObject(options) ? options : {};
+            
+            if (!angular.isArray(entity.attributes)) {
+                entity.attributes = scUtils.wrapAttributes(entity.attributes);
+            }
+            
             return $q(function performUpdateEntity(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -240,7 +255,10 @@
                     path: PATH_ENTITIES + '/' + entity.id,
                     data: entity
                 }).then(function (res) {
-                    resolve(res.data);
+                    if (options.unwrap) {
+                        return resolve(scUtils.unwrapEntity(res.data));
+                    }
+                    return resolve(res.data);
                 }, reject);
             });
         }
