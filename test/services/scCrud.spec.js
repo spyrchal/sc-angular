@@ -5,7 +5,9 @@
 /* global ngMidwayTester */
 
 describe('scCrud', function () {
-  var tester, scCrud, auth, validWorkspaceId, validTypeId, validEntityId, validEntityData;
+  var tester, scCrud, auth,
+      validWorkspaceId, validTypeId, validEntityId, validEntityData,
+      linkTestTypeId, linkTestEntityId;
   
   beforeEach(function () {  
     tester = ngMidwayTester('sociocortex');
@@ -24,6 +26,9 @@ describe('scCrud', function () {
         'type': 'text'
       }]
     };
+    
+    linkTestTypeId = '12xe7z0340vno'; // type sc-angular-test.test-link-1
+    linkTestEntityId = 'crgp2ye1hak1'; // entity named "1"
   });
 
   afterEach(function() {
@@ -33,17 +38,51 @@ describe('scCrud', function () {
   
   describe('entities', function () {
     describe('#findAll', function () {
-      it('returns returns a sane array of entities if passed valid auth details and a valid type id', function (done) {
+      it('returns returns an array of entities if passed valid auth details and a valid type id', function (done) {
         scCrud.entities
         .findAll(auth, validTypeId)
         .then(function success(res) {
           expect(res).toBeDefined();
-          expect(angular.isArray(res)).toBe(true);
+          expect(res).toEqual(jasmine.any(Array));
           expect(res.length).toBeGreaterThan(0);
           expect(res[0].id).toEqual(jasmine.any(String));
           expect(res[0].type).toBeDefined();
           expect(res[0].type.uid).toBeDefined();
           expect(res[0].type.uid).toEqual('types/' + validTypeId);
+        }, function error(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+      
+      it('includes version and attribute details if includeDetails is set true', function (done) {
+        scCrud.entities
+        .findAll(auth, validTypeId, true)
+        .then(function success(res) {
+          expect(res).toBeDefined();
+          expect(res).toEqual(jasmine.any(Array));
+          expect(res.length).toBeGreaterThan(0);
+          expect(res[0].attributes).toEqual(jasmine.any(Array));
+          expect(res[0].versions).toEqual(jasmine.any(Array));
+          expect(res[0].versions.length).toBeGreaterThan(0);
+          expect(res[0].versions[0].action).toEqual(jasmine.any(String));
+        }, function error(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+
+      
+      it('resolves references in attributes if resolveReferences is set true', function (done) {
+        scCrud.entities
+        .findAll(auth, linkTestTypeId, false, true)
+        .then(function success(res) {
+          expect(res.length).toEqual(1);
+          
+          // c.f. #findOne test case "recursively resolves all link references if passed a flag to do so"
+          expect(res[0].attributes[1].resolved[0].attributes[0].resolved[0].name).toEqual('121');
         }, function error(err) {
           expect(err).toBeUndefined();
           fail('should not reject the promise');
@@ -60,6 +99,57 @@ describe('scCrud', function () {
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(res.id).toEqual(validEntityId);
+        }, function error(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+      
+      it('recursively resolves all link references if passed a flag to do so', function (done) {
+        scCrud.entities
+        .findOne(auth, linkTestEntityId, true)
+        .then(function success(res) {
+          expect(res).toBeDefined();
+          expect(res.id).toEqual(linkTestEntityId);
+
+          // first level
+          expect(res.attributes.length).toEqual(2);
+          expect(res.attributes[0].type).toEqual('link');
+          expect(res.attributes[0].resolved).toEqual(jasmine.any(Array));
+          expect(res.attributes[0].resolved.length).toEqual(1);
+          expect(res.attributes[0].resolved[0].name).toEqual('11');
+          expect(res.attributes[0].resolved[0].isCircular).toBeFalsy();
+          var lv11 = res.attributes[0].resolved[0];
+          
+          expect(res.attributes[1].type).toEqual('link');
+          expect(res.attributes[1].resolved).toEqual(jasmine.any(Array));
+          expect(res.attributes[1].resolved.length).toEqual(1);
+          expect(res.attributes[1].resolved[0].name).toEqual('12');
+          expect(res.attributes[1].resolved[0].isCircular).toBeFalsy();
+          var lv12 = res.attributes[1].resolved[0];
+
+          // second level
+          expect(lv11.attributes.length).toEqual(2);
+          expect(lv11.attributes[0].type).toEqual('link');
+          expect(lv11.attributes[0].resolved).toEqual(jasmine.any(Array));
+          expect(lv11.attributes[0].resolved.length).toEqual(1);
+          expect(lv11.attributes[0].resolved[0].name).toEqual('111');
+          expect(lv11.attributes[0].resolved[0].isCircular).toBeFalsy();
+          
+          expect(lv11.attributes[1].type).toEqual('link');
+          expect(lv11.attributes[1].resolved).toEqual(jasmine.any(Array));
+          expect(lv11.attributes[1].resolved.length).toEqual(3);
+          expect(lv11.attributes[1].resolved[0].name).toEqual('112a');
+          expect(lv11.attributes[1].resolved[1].name).toEqual('112b');
+          expect(lv11.attributes[1].resolved[2].name).toEqual('112c');
+          
+          expect(lv12.attributes.length).toEqual(2);
+          expect(lv12.attributes[0].type).toEqual('link');
+          expect(lv12.attributes[0].resolved).toEqual(jasmine.any(Array));
+          expect(lv12.attributes[0].resolved[0].name).toEqual('121');
+          expect(lv12.attributes[0].resolved[0].isCircular).toBeFalsy();
+          expect(lv12.attributes[1].resolved[0].isCircular).toBeTruthy();
         }, function error(err) {
           expect(err).toBeUndefined();
           fail('should not reject the promise');

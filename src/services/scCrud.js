@@ -34,14 +34,122 @@
         
         
         // ENTITIES
-        function findAllEntities(auth, typeId) {
-            // for performance reasons, one shouldn't call this w/o a typeId filter (takes ages to finish)
-            var path = angular.isString(typeId) ? PATH_TYPES + '/' + typeId + '/' + PATH_ENTITIES : PATH_ENTITIES;
-            return genericFind(auth, path);
+        function findAllEntities(auth, typeId, includeDetails, resolveReferences) {
+            return $q(function performFindAllEntities(resolve, reject) {
+                var path = angular.isString(typeId) ? PATH_TYPES + '/' + typeId + '/' + PATH_ENTITIES : PATH_ENTITIES;
+                
+                genericFind(auth, path).then(function (entities) {
+                    if (includeDetails || resolveReferences) {
+                        enrichEntities(auth, entities).then(function (entities) {
+                            if (resolveReferences) {
+                                var promises = [];
+                                for (var i = 0; i < entities.length; i++) {
+                                    promises.push(resolveEntityLinkAttributes(auth, entities[i]));
+                                }
+                                $q.all(promises).then(resolve, reject);
+                            } else {
+                                resolve(entities);
+                            }
+                        }, reject);
+                    } else {
+                        resolve(entities);
+                    }
+                }, reject);
+            });
         }
         
-        function findOneEntity(auth, entityId) {
-            return genericFindOne(auth, PATH_ENTITIES, entityId);
+        // Neither GET /entities nor /types/:id/entities include e.g. version details.
+        // This method takes a list of "lean" entities and enriches it with said details
+        // by calling GET /entities/:id for each element.
+        function enrichEntities(auth, entities) {
+            var promises = [];
+            for (var i = 0; i < entities.length; i++) {
+                promises.push(findOneEntity(auth, entities[i].id));
+            }
+            return $q.all(promises);
+        }
+        
+        function findOneEntity(auth, entityId, resolveAttributes) {
+            if (!resolveAttributes) {
+                return genericFindOne(auth, PATH_ENTITIES, entityId);
+            } else {
+                return findOneEntityAndResolveEntities(auth, entityId);
+            }
+        }
+        
+        function findOneEntityAndResolveEntities(auth, entityId, visited) {
+            visited = visited || [];
+            
+            return $q(function performFindOneEntity(resolve, reject) {
+                genericFindOne(auth, PATH_ENTITIES, entityId).then(function (entity) {
+                    resolveEntityLinkAttributes(auth, entity, visited).then(resolve, reject);
+                }, reject);
+            });
+        }
+        
+        function resolveEntityLinkAttributes(auth, entity, visited) {
+            visited = visited || [];
+            
+            return $q(function performResolveEntityAttributes(resolve, reject) {
+                visited.push(entity.id);
+                
+                var promises = {};
+                
+                var attribute;
+                for (var attributeIndex = 0; attributeIndex < entity.attributes.length; attributeIndex++) {
+                    attribute = entity.attributes[attributeIndex];
+                    
+                    if (attribute.type === 'link') {
+                        var entityLinks = attribute.values; // possibly multiple links per attribute
+                        
+                        // store promises in a map, so that the resolved links can be attached to their
+                        // respective attributes later on
+                        promises[attributeIndex.toString()] = resolveEntityLinks(auth, entityLinks, visited);
+                    }
+                }
+                
+                $q.all(promises).then(function (resolvedLinksMap) {
+                    // attach resolved links to their respective attributes
+                    for (var attributeIndex in resolvedLinksMap) {
+                        if (resolvedLinksMap.hasOwnProperty(attributeIndex)) {
+                            var resolvedLinks = resolvedLinksMap[attributeIndex];
+                            entity.attributes[parseInt(attributeIndex)].resolved = resolvedLinks;
+                        }
+                    }
+                    
+                    resolve(entity);
+                }, reject);
+            });
+        }
+        
+        function resolveEntityLinks(auth, entityLinks, visited) {
+            return $q(function performResolveEntityLinks(resolve, reject) {
+                var currSubEntityUid, currSubEntityId;
+                
+                var subPromises = [];
+                
+                for (var j = 0; j < entityLinks.length; j++) {
+                    currSubEntityUid = entityLinks[j].uid;
+                    currSubEntityId = currSubEntityUid.split('/')[1];
+                    
+                    var subPromise;
+                    if (visited.indexOf(currSubEntityId) > -1) {
+                        // found previously visited entity id => circular reference
+                        subPromise = resolveCircularLink(currSubEntityUid, currSubEntityId);
+                    } else {
+                        subPromise = findOneEntityAndResolveEntities(auth, currSubEntityId, visited);
+                    }
+                    subPromises.push(subPromise);
+                }
+
+                $q.all(subPromises).then(resolve, reject);
+            });
+        }
+        
+        function resolveCircularLink(uid, id) {
+            return $q(function (resolve) {
+                resolve({ uid: uid, id: id, isCircular: true });
+            });
         }
         
         function validateEntityAttributes(attributes) {
