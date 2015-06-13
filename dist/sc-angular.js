@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.4.2
+ * @license sc-angular v0.4.3
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -122,7 +122,7 @@
         PATH_TYPES = 'types',
         PATH_WORKSPACES = 'workspaces';
     
-    angular.module('sociocortex').service('scCrud', ['$q', 'scCore', function scCrudService($q, scCore) {        
+    angular.module('sociocortex').service('scCrud', ['$q', 'scCore', 'scUtils', function scCrudService($q, scCore, scUtils) {        
         return {
             entities: {
                 findAll: findAllEntities,
@@ -149,26 +149,36 @@
         
         
         // ENTITIES
-        function findAllEntities(auth, typeId, includeDetails, resolveReferences) {
+        function findAllEntities(auth, typeId, options) {
+            options = angular.isObject(options) ? options : {};
+            
             return $q(function performFindAllEntities(resolve, reject) {
                 var path = angular.isString(typeId) ? PATH_TYPES + '/' + typeId + '/' + PATH_ENTITIES : PATH_ENTITIES;
                 
-                genericFind(auth, path).then(function (entities) {
-                    if (includeDetails || resolveReferences) {
-                        enrichEntities(auth, entities).then(function (entities) {
-                            if (resolveReferences) {
-                                var promises = [];
-                                for (var i = 0; i < entities.length; i++) {
-                                    promises.push(resolveEntityLinkAttributes(auth, entities[i]));
-                                }
-                                $q.all(promises).then(resolve, reject);
-                            } else {
-                                resolve(entities);
-                            }
-                        }, reject);
-                    } else {
-                        resolve(entities);
+                return genericFind(auth, path).then(function (entities) {
+                    if (!options.includeDetails && !options.resolveReferences) {
+                        return resolve(entities);
                     }
+                    
+                    return enrichEntities(auth, entities).then(function (entities) {
+                        if (options.resolveReferences) {
+                            var promises = [];
+                            for (var i = 0; i < entities.length; i++) {
+                                promises.push(resolveEntityLinkAttributes(auth, entities[i]));
+                            }
+                            return $q.all(promises).then(function (entities) {
+                                if (options.unwrap) {
+                                    return resolve(scUtils.unwrapEntities(entities));
+                                }
+                                return resolve(entities);
+                            }, reject);
+                        }
+                        
+                        if (options.unwrap) {
+                            return resolve(scUtils.unwrapEntities(entities));
+                        }
+                        return resolve(entities);
+                    }, reject);
                 }, reject);
             });
         }
@@ -184,15 +194,28 @@
             return $q.all(promises);
         }
         
-        function findOneEntity(auth, entityId, resolveAttributes) {
-            if (!resolveAttributes) {
-                return genericFindOne(auth, PATH_ENTITIES, entityId);
-            } else {
-                return findOneEntityAndResolveEntities(auth, entityId);
-            }
+        function findOneEntity(auth, entityId, options) {
+            options = angular.isObject(options) ? options : {};
+            
+            return $q(function performFindOneEntity(resolve, reject) {
+                
+                var promise;
+                if (options.resolveReferences) {
+                    promise = findOneEntityAndResolveReferences(auth, entityId);
+                } else {
+                    promise = genericFindOne(auth, PATH_ENTITIES, entityId);
+                }
+                
+                promise.then(function (entity) {
+                    if (options.unwrap) {
+                        return resolve(scUtils.unwrapEntity(entity));
+                    }
+                    return resolve(entity);
+                }, reject);
+            });
         }
         
-        function findOneEntityAndResolveEntities(auth, entityId, visited) {
+        function findOneEntityAndResolveReferences(auth, entityId, visited) {
             visited = visited || [];
             
             return $q(function performFindOneEntity(resolve, reject) {
@@ -252,7 +275,7 @@
                         // found previously visited entity id => circular reference
                         subPromise = resolveCircularLink(currSubEntityUid, currSubEntityId);
                     } else {
-                        subPromise = findOneEntityAndResolveEntities(auth, currSubEntityId, visited);
+                        subPromise = findOneEntityAndResolveReferences(auth, currSubEntityId, visited);
                     }
                     subPromises.push(subPromise);
                 }
@@ -367,12 +390,14 @@
         
         
         // TYPES
-        function findAllTypes(auth, workspaceId, includeAttributes) {
+        function findAllTypes(auth, workspaceId, options) {
+            options = angular.isObject(options) ? options : {};
+            
             return $q(function performFindAllTypes(resolve, reject) {
                 var path = angular.isString(workspaceId) ? PATH_WORKSPACES + '/' + workspaceId + '/' + PATH_TYPES : PATH_TYPES;
                 
                 genericFind(auth, path).then(function resolveTypes(resTypes) {
-                    if (!includeAttributes) {
+                    if (!options.includeAttributes) {
                         return resolve(resTypes);
                     }
                     
@@ -393,7 +418,9 @@
             });
         }
         
-        function findOneType(auth, typeId, includeAttributes) {
+        function findOneType(auth, typeId, options) {
+            options = angular.isObject(options) ? options : {};
+            
             return $q(function performFindOneType(resolve, reject) {
                 var err = validate([
                     [ auth, angular.isObject, 'auth is an object' ],
@@ -402,7 +429,7 @@
                 if (err) { return reject(err); }
                 
                 genericFindOne(auth, PATH_TYPES, typeId).then(function (resType) {
-                    if (!includeAttributes) {
+                    if (!options.includeAttributes) {
                         return resolve(resType);
                     }
                     
@@ -544,12 +571,16 @@
     angular.module('sociocortex').service('scUtils', [function scUtils() {
         return {
             unwrapAttributes: unwrapAttributes,
-            wrapAttributes: wrapAttributes
+            wrapAttributes: wrapAttributes,
+            unwrapEntity: unwrapEntity,
+            unwrapEntities: unwrapEntities
         };
         
         // turns this: '[{ "values": [ "18.4" ], "name": "Price", "type": "number" }]'
         // into this:  '{ "Price": 18.4 }' 
         function unwrapAttributes(attributes) {
+            attributes = angular.isArray(attributes) ? attributes : [];
+            
             var res = {};
             
             var currAttr;
@@ -567,6 +598,8 @@
                         var dateString = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
                         currAttr.values[j] = new Date(dateString);
                     }
+                } else if (currAttr.type === 'link' && currAttr.resolved) {
+                    currAttr.values = currAttr.resolved;
                 }
                 
                 if (currAttr.values.length === 1) {
@@ -622,8 +655,12 @@
                         attribute.type = 'number';
                         attribute.values = newValues;
                     } else if (typeof sampleValue === 'object' && typeof sampleValue.uid === 'string') {
+                        for (var j = 0; j < values.length; j++) {
+                            newValues.push({ uid: values[j].uid, name: values[j].name });
+                        }
+
                         attribute.type = 'link';
-                        attribute.values = values;
+                        attribute.values = newValues;
                     } else {
                         // can't distinguish between text, enum, longText etc
                         attribute.type = 'text';
@@ -635,6 +672,19 @@
             }
             
             return attributes;
+        }
+        
+        function unwrapEntities(entities) {
+            var unwrappedEntities = [];
+            for (var i = 0; i < entities.length; i++) {
+                unwrappedEntities.push(unwrapEntity(entities[i]));
+            }
+            return unwrappedEntities;
+        }
+        
+        function unwrapEntity(entity) {
+            entity.attributes = unwrapAttributes(entity.attributes);
+            return entity;
         }
     }]);
 })();

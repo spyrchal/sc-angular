@@ -56,9 +56,9 @@ describe('scCrud', function () {
         .finally(done);
       });
       
-      it('includes version and attribute details if includeDetails is set true', function (done) {
+      it('includes version and attribute details if option includeDetails is set true', function (done) {
         scCrud.entities
-        .findAll(auth, validTypeId, true)
+        .findAll(auth, validTypeId, { includeDetails: true })
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(res).toEqual(jasmine.any(Array));
@@ -73,11 +73,26 @@ describe('scCrud', function () {
         })
         .finally(done);
       });
-
       
-      it('resolves references in attributes if resolveReferences is set true', function (done) {
+      it('includes applies scUtils#unwrapAttributes if option unwrap is set true', function (done) {
         scCrud.entities
-        .findAll(auth, linkTestTypeId, false, true)
+        .findAll(auth, validTypeId, { includeDetails: true, unwrap: true })
+        .then(function success(res) {
+          expect(res).toBeDefined();
+          expect(res).toEqual(jasmine.any(Array));
+          expect(res.length).toBeGreaterThan(0);
+          expect(res[0].attributes).toEqual(jasmine.any(Object));
+          expect(res[0].attributes['test-attribute']).toEqual('testx');
+        }, function error(err) {
+          expect(err).toBeUndefined();
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+      
+      it('resolves references in attributes if option resolveReferences is set true', function (done) {
+        scCrud.entities
+        .findAll(auth, linkTestTypeId, { resolveReferences: true })
         .then(function success(res) {
           expect(res.length).toEqual(1);
           
@@ -106,9 +121,9 @@ describe('scCrud', function () {
         .finally(done);
       });
       
-      it('recursively resolves all link references if passed a flag to do so', function (done) {
+      it('recursively resolves all link references if option resolveReferences is set true', function (done) {
         scCrud.entities
-        .findOne(auth, linkTestEntityId, true)
+        .findOne(auth, linkTestEntityId, { resolveReferences: true })
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(res.id).toEqual(linkTestEntityId);
@@ -264,9 +279,9 @@ describe('scCrud', function () {
         .finally(done);
       });
       
-      it('returns returns an enriched array of objects if parameter includeAttributes is truthy', function (done) {
+      it('returns returns an enriched array of objects if option includeAttributes is set true', function (done) {
         scCrud.types
-        .findAll(auth, null, true)
+        .findAll(auth, null, { includeAttributes: true })
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(angular.isArray(res)).toBe(true);
@@ -293,9 +308,9 @@ describe('scCrud', function () {
         .finally(done);
       });
 
-      it('includes an array of attributes if parameter includeAttributes is truthy', function (done) {
+      it('includes an array of attributes if option includeAttributes is true', function (done) {
         scCrud.types
-        .findOne(auth, validTypeId, true)
+        .findOne(auth, validTypeId, { includeAttributes: true })
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(res.attributes).toBeDefined();

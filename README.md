@@ -9,7 +9,7 @@ After that, add the `sc-angular` module as a dependency to your application modu
 angular.module('myApp', ['sociocortex']);
 ```
 
-The module exposes angular services: `scCore`, `scCrud`, `scMxl`, `scUtil`.
+The module exposes angular services: `scCore`, `scCrud`, `scMxl`, `scUtils`.
 
 (...)
 

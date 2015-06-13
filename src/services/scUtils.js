@@ -3,12 +3,16 @@
     angular.module('sociocortex').service('scUtils', [function scUtils() {
         return {
             unwrapAttributes: unwrapAttributes,
-            wrapAttributes: wrapAttributes
+            wrapAttributes: wrapAttributes,
+            unwrapEntity: unwrapEntity,
+            unwrapEntities: unwrapEntities
         };
         
         // turns this: '[{ "values": [ "18.4" ], "name": "Price", "type": "number" }]'
         // into this:  '{ "Price": 18.4 }' 
         function unwrapAttributes(attributes) {
+            attributes = angular.isArray(attributes) ? attributes : [];
+            
             var res = {};
             
             var currAttr;
@@ -26,6 +30,8 @@
                         var dateString = dateParts[2] + '-' + dateParts[1] + '-' + dateParts[0];
                         currAttr.values[j] = new Date(dateString);
                     }
+                } else if (currAttr.type === 'link' && currAttr.resolved) {
+                    currAttr.values = currAttr.resolved;
                 }
                 
                 if (currAttr.values.length === 1) {
@@ -81,8 +87,12 @@
                         attribute.type = 'number';
                         attribute.values = newValues;
                     } else if (typeof sampleValue === 'object' && typeof sampleValue.uid === 'string') {
+                        for (var j = 0; j < values.length; j++) {
+                            newValues.push({ uid: values[j].uid, name: values[j].name });
+                        }
+
                         attribute.type = 'link';
-                        attribute.values = values;
+                        attribute.values = newValues;
                     } else {
                         // can't distinguish between text, enum, longText etc
                         attribute.type = 'text';
@@ -94,6 +104,19 @@
             }
             
             return attributes;
+        }
+        
+        function unwrapEntities(entities) {
+            var unwrappedEntities = [];
+            for (var i = 0; i < entities.length; i++) {
+                unwrappedEntities.push(unwrapEntity(entities[i]));
+            }
+            return unwrappedEntities;
+        }
+        
+        function unwrapEntity(entity) {
+            entity.attributes = unwrapAttributes(entity.attributes);
+            return entity;
         }
     }]);
 })();
