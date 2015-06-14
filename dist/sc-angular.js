@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.4.4
+ * @license sc-angular v0.5.0
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -296,7 +296,7 @@
                 attribute = attributes[i];
                 if (!angular.isArray(attribute.values) ||
                     !angular.isString(attribute.name) ||
-                    !angular.isString(attribute.type)) {
+                    (angular.isDefined(attribute.type) && !angular.isString(attribute.type))) {
                     return false;        
                 }
             }
@@ -337,7 +337,7 @@
                     data: entityData
                 }).then(function (res) {
                     if (options.unwrap) {
-                        return resolve(scUtils.unwrapEntity(resolve(res.data)));
+                        return resolve(scUtils.unwrapEntity(res.data));
                     }
                     return resolve(res.data);
                 }, reject);

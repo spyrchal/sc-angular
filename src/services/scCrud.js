@@ -181,7 +181,7 @@
                 attribute = attributes[i];
                 if (!angular.isArray(attribute.values) ||
                     !angular.isString(attribute.name) ||
-                    !angular.isString(attribute.type)) {
+                    (angular.isDefined(attribute.type) && !angular.isString(attribute.type))) {
                     return false;        
                 }
             }
@@ -222,7 +222,7 @@
                     data: entityData
                 }).then(function (res) {
                     if (options.unwrap) {
-                        return resolve(scUtils.unwrapEntity(resolve(res.data)));
+                        return resolve(scUtils.unwrapEntity(res.data));
                     }
                     return resolve(res.data);
                 }, reject);
