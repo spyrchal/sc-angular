@@ -5,7 +5,8 @@
             unwrapAttributes: unwrapAttributes,
             wrapAttributes: wrapAttributes,
             unwrapEntity: unwrapEntity,
-            unwrapEntities: unwrapEntities
+            unwrapEntities: unwrapEntities,
+            parseDate: parseDate
         };
         
         // turns this: '[{ "values": [ "18.4" ], "name": "Price", "type": "number" }]'
@@ -117,6 +118,24 @@
         function unwrapEntity(entity) {
             entity.attributes = unwrapAttributes(entity.attributes);
             return entity;
+        }
+        
+        function parseDate(dateString) {
+            // SC seems to use the german timezone when storing dates and returns them like this:
+            // "2015-06-18 02:40:49.669"" which can't be parsed by most browsers (e.g. current iOS, IE11).
+            var date = new Date(dateString.replace(' ', 'T'));
+            
+            // new Date() assumes UTC and adds the local offset, thus resulting in two offsets
+            // subtract the german offset
+            var germanOffset;
+            if (date.getMonth() > 2 && date.getMonth() < 10) { // simplified
+                germanOffset = 120; // CEST (UTC+2)
+            } else {
+                germanOffset = 60; // CET (UTC+1)
+            }
+            
+            date.setTime(date.getTime() - germanOffset * 60 * 1000);
+            return date;
         }
     }]);
 })();

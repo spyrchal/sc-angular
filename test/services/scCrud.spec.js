@@ -310,9 +310,11 @@ describe('scCrud', function () {
           expect(res[0].attributes).toBeDefined();
           expect(angular.isArray(res[0].attributes)).toBe(true);
           done();
-        }, function error() {
+        }, function error(err) {
+          expect(err).toBeUndefined();
           fail('should not reject the promise');
-        });
+        })
+        .finally(done);
       });
     });
     

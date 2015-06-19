@@ -72,4 +72,14 @@ describe('scUtils', function () {
       expect(scUtils.wrapAttributes(attributeObject)).toEqual(attributeArray);
     });
   });
+  
+  describe('#parseDate', function () {
+    it('strips the german offset from a given date string and returns a valid Date', function () {
+      var reference = '2015-06-18 02:40:49.669'; // as seen in the versions array of entities
+      var result = scUtils.parseDate(reference);
+      expect(result.getUTCHours()).toEqual(0);
+      expect(result.getUTCMinutes()).toEqual(40);
+      expect(result.getUTCDate()).toEqual(18);
+    });
+  });
 });

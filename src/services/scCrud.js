@@ -307,13 +307,13 @@
                     // resolve attributes (which may lead to a significant number of API calls)
                     var promises = [], currTypeId;
                     for (var i = 0; i < resTypes.length; i++) {
-                        currTypeId = resTypes[i].id;
+                        currTypeId = resTypes[i].uid.split('/')[1];
                         promises.push(findTypeAttributes(auth, currTypeId));
                     }
 
                     $q.all(promises).then(function resolveAttributesOfTypes(attributeCollection) {
                         for (i = 0; i < resTypes.length; i++) {
-                            resTypes[i].attributes = attributeCollection[i].data;
+                            resTypes[i].attributes = attributeCollection[i];
                         }
                         return resolve(resTypes);
                     }, reject);
@@ -337,8 +337,8 @@
                     }
                     
                     // resolve attributes
-                    findTypeAttributes(auth, typeId).then(function resolveTypeAttributes(res) {
-                        resType.attributes = res.data;
+                    findTypeAttributes(auth, typeId).then(function resolveTypeAttributes(attributes) {
+                        resType.attributes = attributes;
                         return resolve(resType);
                     }, reject);
                 }, reject);
@@ -346,10 +346,21 @@
         }
         
         function findTypeAttributes(auth, typeId) {
-            return scCore.scRequest({
-                httpMethod: 'GET',
-                path: PATH_TYPES + '/' + typeId + '/' + PATH_ATTRIBUTES,
-                auth: auth
+            return $q(function performFindTypeAttributes(resolve, reject) {
+                scCore.scRequest({
+                    httpMethod: 'GET',
+                    path: PATH_TYPES + '/' + typeId + '/' + PATH_ATTRIBUTES,
+                    auth: auth
+                }).then(function (res) {
+                    return resolve(res.data);
+                }, function (err) {
+                    if (err.data && err.data.cause === 'NullPointerException') {
+                        // assume that there just aren't any attributes
+                        return resolve([]);
+                    } else {
+                        return reject(err);
+                    }
+                });
             });
         }
         
