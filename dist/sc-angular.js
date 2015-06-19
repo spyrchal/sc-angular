@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.5.0
+ * @license sc-angular v0.5.2
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -684,9 +684,14 @@
                         }
                         attribute.type = 'number';
                         attribute.values = newValues;
-                    } else if (angular.isObject(sampleValue) && angular.isString(sampleValue.uid)) {
+                    } else if (angular.isObject(sampleValue) &&
+                               (angular.isString(sampleValue.uid) ||
+                                angular.isString(sampleValue.id))) {
                         for (var j = 0; j < values.length; j++) {
-                            newValues.push({ uid: values[j].uid, name: values[j].name });
+                            newValues.push({
+                                uid: values[j].uid || 'entitiy/' + values[j].id,
+                                name: values[j].name
+                            });
                         }
 
                         attribute.type = 'link';

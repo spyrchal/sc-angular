@@ -87,9 +87,14 @@
                         }
                         attribute.type = 'number';
                         attribute.values = newValues;
-                    } else if (angular.isObject(sampleValue) && angular.isString(sampleValue.uid)) {
+                    } else if (angular.isObject(sampleValue) &&
+                               (angular.isString(sampleValue.uid) ||
+                                angular.isString(sampleValue.id))) {
                         for (var j = 0; j < values.length; j++) {
-                            newValues.push({ uid: values[j].uid, name: values[j].name });
+                            newValues.push({
+                                uid: values[j].uid || 'entitiy/' + values[j].id,
+                                name: values[j].name
+                            });
                         }
 
                         attribute.type = 'link';
