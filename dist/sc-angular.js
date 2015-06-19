@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.5.2
+ * @license sc-angular v0.5.3
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -689,7 +689,7 @@
                                 angular.isString(sampleValue.id))) {
                         for (var j = 0; j < values.length; j++) {
                             newValues.push({
-                                uid: values[j].uid || 'entitiy/' + values[j].id,
+                                uid: values[j].uid || 'entities/' + values[j].id,
                                 name: values[j].name
                             });
                         }
