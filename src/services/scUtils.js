@@ -33,6 +33,10 @@
                     }
                 } else if (currAttr.type === 'link' && currAttr.resolved) {
                     currAttr.values = currAttr.resolved;
+                    
+                    for (var j = 0; j < currAttr.values.length; j++) {
+                        currAttr.values[j].attributes = unwrapAttributes(currAttr.values[j].attributes);
+                    }
                 }
                 
                 if (currAttr.values.length === 1) {
