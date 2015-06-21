@@ -45,10 +45,12 @@ describe('scCrud', function () {
           expect(res).toBeDefined();
           expect(res).toEqual(jasmine.any(Array));
           expect(res.length).toBeGreaterThan(0);
-          expect(res[0].id).toEqual(jasmine.any(String));
-          expect(res[0].type).toBeDefined();
-          expect(res[0].type.uid).toBeDefined();
-          expect(res[0].type.uid).toEqual('types/' + validTypeId);
+          expect(res[0].uid).toEqual(jasmine.any(String));
+          
+          // as of 2015-06-21, GET /types/:id/entities seems to no longer include (arguably redundant) type details in the result objects
+          // expect(res[0].type).toBeDefined();
+          // expect(res[0].type.uid).toBeDefined();
+          // expect(res[0].type.uid).toEqual('types/' + validTypeId);
         }, function error(err) {
           expect(err).toBeUndefined();
           fail('should not reject the promise');
@@ -113,7 +115,7 @@ describe('scCrud', function () {
         .findOne(auth, validEntityId)
         .then(function success(res) {
           expect(res).toBeDefined();
-          expect(res.id).toEqual(validEntityId);
+          expect(res.uid).toEqual('entities/' + validEntityId);
         }, function error(err) {
           expect(err).toBeUndefined();
           fail('should not reject the promise');
@@ -126,7 +128,7 @@ describe('scCrud', function () {
         .findOne(auth, linkTestEntityId, { resolveReferences: true })
         .then(function success(res) {
           expect(res).toBeDefined();
-          expect(res.id).toEqual(linkTestEntityId);
+          expect(res.uid).toEqual('entities/' + linkTestEntityId);
 
           // first level
           expect(res.attributes.length).toEqual(2);
@@ -181,7 +183,10 @@ describe('scCrud', function () {
         .then(function createSuccess(res) {
           expect(res).toBeDefined();
           expect(res.uid).toEqual(jasmine.any(String));
-          expect(res.id).toEqual(jasmine.any(String));
+          
+          // the "id" field has disappeared on 2015-06-21
+          // expect(res.id).toEqual(jasmine.any(String));
+          
           expect(res.attributes).toEqual(validEntityData.attributes);
           expect(res.versions).toEqual(jasmine.any(Array));
           expect(res.versions.length).toEqual(1);
@@ -300,7 +305,8 @@ describe('scCrud', function () {
         .finally(done);
       });
       
-      it('returns returns an enriched array of objects if option includeAttributes is set true', function (done) {
+      // GET types/:id/attributes is currently broken; see https://bitbucket.org/sebischair/sociocortex/issue/22/
+      xit('returns returns an enriched array of objects if option includeAttributes is set true', function (done) {
         scCrud.types
         .findAll(auth, null, { includeAttributes: true })
         .then(function success(res) {
@@ -331,11 +337,16 @@ describe('scCrud', function () {
         .finally(done);
       });
 
-      it('includes an array of attributes if option includeAttributes is true', function (done) {
+      // GET types/:id/attributes is currently broken; see https://bitbucket.org/sebischair/sociocortex/issue/22/
+      xit('includes an array of attributes if option includeAttributes is true', function (done) {
         scCrud.types
         .findOne(auth, validTypeId, { includeAttributes: true })
         .then(function success(res) {
           expect(res).toBeDefined();
+          
+          // TODO: remove this after #22 is resolved
+          console.log(JSON.stringify(res, null, 2));
+          
           expect(res.attributes).toBeDefined();
           expect(res.attributes).toEqual(jasmine.any(Array));
         }, function error() {
@@ -355,11 +366,13 @@ describe('scCrud', function () {
           expect(res).toBeDefined();
           expect(angular.isArray(res)).toBe(true);
           expect(res.length).toBeGreaterThan(0);
-          expect(res[0].email).toEqual(jasmine.any(String));
-          expect(res[0].groups).toEqual(jasmine.any(Array));
-          expect(res[0].id).toEqual(jasmine.any(String));
+          
+          // as of 2015-06-21, elements of collections seem to no longer contain fields other than "uid" and "name"
+          expect(res[0].uid).toEqual(jasmine.any(String));
           expect(res[0].name).toEqual(jasmine.any(String));
-          expect(res[0].picture).toEqual(jasmine.any(String));
+          // expect(res[0].email).toEqual(jasmine.any(String));
+          // expect(res[0].groups).toEqual(jasmine.any(Array));
+          // expect(res[0].picture).toEqual(jasmine.any(String));
         }, function error() {
           fail('should not reject the promise');
         })
@@ -375,7 +388,7 @@ describe('scCrud', function () {
           expect(res).toBeDefined();
           expect(res.email).toEqual(auth.user);
           expect(res.groups).toEqual(jasmine.any(Array));
-          expect(res.id).toEqual(jasmine.any(String));
+          expect(res.uid).toEqual(jasmine.any(String));
           expect(res.name).toEqual(jasmine.any(String));
           expect(res.picture).toEqual(jasmine.any(String));
         }, function error() {
@@ -395,7 +408,7 @@ describe('scCrud', function () {
           expect(res).toBeDefined();
           expect(angular.isArray(res)).toBe(true);
           expect(res.length).toBeGreaterThan(0);
-          expect(res[0].id).toEqual(jasmine.any(String));
+          expect(res[0].uid).toEqual(jasmine.any(String));
           expect(res[0].name).toEqual(jasmine.any(String));
         }, function error() {
           fail('should not reject the promise');

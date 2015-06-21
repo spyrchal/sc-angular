@@ -74,6 +74,8 @@
         function enrichEntities(auth, entities) {
             var promises = [];
             for (var i = 0; i < entities.length; i++) {
+                entities[i].id = entities[i].id || entities[i].uid.split('/')[1];
+                
                 promises.push(findOneEntity(auth, entities[i].id));
             }
             return $q.all(promises);
@@ -114,6 +116,7 @@
             visited = visited || [];
             
             return $q(function performResolveEntityAttributes(resolve, reject) {
+                entity.id = entity.id || entity.uid.split('/')[1];
                 visited.push(entity.id);
                 
                 var promises = {};
@@ -252,7 +255,7 @@
                 scCore.scRequest({
                     httpMethod: 'PUT',
                     auth: auth,
-                    path: PATH_ENTITIES + '/' + entity.id,
+                    path: entity.uid || PATH_ENTITIES + '/' + entity.id,
                     data: entity
                 }).then(function (res) {
                     if (options.unwrap) {
@@ -268,7 +271,7 @@
                 scCore.scRequest({
                     httpMethod: 'DELETE',
                     auth: auth,
-                    path: PATH_ENTITIES + '/' + entity.id
+                    path: entity.uid || PATH_ENTITIES + '/' + entity.id
                 }).then(function (res) {
                     resolve(true);
                 }, reject);
@@ -335,6 +338,8 @@
                     if (!options.includeAttributes) {
                         return resolve(resType);
                     }
+                    
+                    console.log('findOneType id', typeId);
                     
                     // resolve attributes
                     findTypeAttributes(auth, typeId).then(function resolveTypeAttributes(attributes) {
