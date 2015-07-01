@@ -1,7 +1,7 @@
 {
   "name": "sc-angular",
-  "version": "0.5.5",
-  "description": "TODO",
+  "version": "0.6.0",
+  "description": "A module for interacting with the SocioCortex backend",
   "repository": {
     "type": "git",
     "url": "https://bitbucket.org/sebischair/sc-angular.git"

@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.5.5
+ * @license sc-angular v0.6.0
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
