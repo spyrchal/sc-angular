@@ -94,9 +94,11 @@
                     } else if (angular.isObject(sampleValue) &&
                                (angular.isString(sampleValue.uid) ||
                                 angular.isString(sampleValue.id))) {
+                                    
+                        var prefix = sampleValue.hasOwnProperty('lastLoginDate') ? 'users/' : 'entities/';
                         for (var j = 0; j < values.length; j++) {
                             newValues.push({
-                                uid: values[j].uid || 'entities/' + values[j].id,
+                                uid: values[j].uid || prefix + values[j].id,
                                 name: values[j].name
                             });
                         }

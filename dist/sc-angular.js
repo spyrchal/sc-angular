@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.6.0
+ * @license sc-angular v0.6.1
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -136,7 +136,8 @@
             },
             users: {
                 findAll: findAllUsers,
-                findSelf: findOwnUser
+                findSelf: findOwnUser,
+                findOne: findOneUser
             },
             types: {
                 findAll: findAllTypes,
@@ -263,24 +264,30 @@
             });
         }
         
-        function resolveEntityLinks(auth, entityLinks, visited) {
+        function resolveEntityLinks(auth, links, visited) {
             return $q(function performResolveEntityLinks(resolve, reject) {
-                var currSubEntityUid, currSubEntityId;
+                var currSubUid, currSubId, currSubType;
                 
                 var subPromises = [];
                 
-                for (var j = 0; j < entityLinks.length; j++) {
-                    currSubEntityUid = entityLinks[j].uid;
-                    currSubEntityId = currSubEntityUid.split('/')[1];
+                for (var j = 0; j < links.length; j++) {
+                    currSubUid = links[j].uid;
+                    currSubType = currSubUid.split('/')[0];
+                    currSubId = currSubUid.split('/')[1];
                     
                     var subPromise;
-                    if (visited.indexOf(currSubEntityId) > -1) {
+                    if (visited.indexOf(currSubId) > -1) {
                         // found previously visited entity id => circular reference
-                        subPromise = resolveCircularLink(currSubEntityUid, currSubEntityId);
-                    } else {
-                        subPromise = findOneEntityAndResolveReferences(auth, currSubEntityId, visited);
+                        subPromise = resolveCircularLink(currSubUid, currSubId);
+                    } else if (currSubType === 'entities') {
+                        subPromise = findOneEntityAndResolveReferences(auth, currSubId, visited);
+                    } else if (currSubType === 'users') {
+                        subPromise = findOneUser(auth, currSubId);
                     }
-                    subPromises.push(subPromise);
+                    
+                    if (subPromise) {
+                        subPromises.push(subPromise);
+                    }
                 }
 
                 $q.all(subPromises).then(resolve, reject);
@@ -408,7 +415,10 @@
         function findOwnUser(auth) {
             return genericFind(auth, PATH_USERS + '/me');
         }
-        
+               
+        function findOneUser(auth, userId) {
+            return genericFindOne(auth, PATH_USERS, userId);
+        }
         
         // TYPES
         function findAllTypes(auth, workspaceId, options) {
@@ -696,9 +706,11 @@
                     } else if (angular.isObject(sampleValue) &&
                                (angular.isString(sampleValue.uid) ||
                                 angular.isString(sampleValue.id))) {
+                                    
+                        var prefix = sampleValue.hasOwnProperty('lastLoginDate') ? 'users/' : 'entities/';
                         for (var j = 0; j < values.length; j++) {
                             newValues.push({
-                                uid: values[j].uid || 'entities/' + values[j].id,
+                                uid: values[j].uid || prefix + values[j].id,
                                 name: values[j].name
                             });
                         }
