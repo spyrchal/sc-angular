@@ -305,16 +305,31 @@ describe('scCrud', function () {
         .finally(done);
       });
       
-      // GET types/:id/attributes is currently broken; see https://bitbucket.org/sebischair/sociocortex/issue/22/
-      xit('returns returns an enriched array of objects if option includeAttributes is set true', function (done) {
+      it('returns returns an enriched array of objects if the flags includeDetails & resolveProperties are set', function (done) {
         scCrud.types
-        .findAll(auth, null, { includeAttributes: true })
+        .findAll(auth, null, { includeDetails: true, resolveProperties: true })
         .then(function success(res) {
           expect(res).toBeDefined();
           expect(angular.isArray(res)).toBe(true);
           expect(res.length).toBeGreaterThan(0);
-          expect(res[0].attributes).toBeDefined();
-          expect(angular.isArray(res[0].attributes)).toBe(true);
+          
+          var foundTestType = false;
+          for (var i = 0; i < res.length; i++) {
+            if (res[i].uid === 'types/' + validTypeId) {
+              expect(res[i].properties).toBeDefined();
+              expect(res[i].properties).toEqual(jasmine.any(Array));
+              expect(res[i].properties.length).toBeGreaterThan(0);
+              expect(res[i].properties[0].versions).toBeDefined();
+              
+              foundTestType = true;
+              break;
+            }
+          }
+          
+          if (!foundTestType) {
+            fail('expected dummy type ' + validTypeId + ' to be contained in the list of types');
+          }
+          
           done();
         }, function error(err) {
           expect(err).toBeUndefined();
@@ -337,18 +352,15 @@ describe('scCrud', function () {
         .finally(done);
       });
 
-      // GET types/:id/attributes is currently broken; see https://bitbucket.org/sebischair/sociocortex/issue/22/
-      xit('includes an array of attributes if option includeAttributes is true', function (done) {
+      it('includes an array of resolved properties if option resolveProperties is true', function (done) {
         scCrud.types
-        .findOne(auth, validTypeId, { includeAttributes: true })
+        .findOne(auth, validTypeId, { resolveProperties: true })
         .then(function success(res) {
           expect(res).toBeDefined();
-          
-          // TODO: remove this after #22 is resolved
-          console.log(JSON.stringify(res, null, 2));
-          
-          expect(res.attributes).toBeDefined();
-          expect(res.attributes).toEqual(jasmine.any(Array));
+          expect(res.properties).toBeDefined();
+          expect(res.properties).toEqual(jasmine.any(Array));
+          expect(res.properties.length).toBeGreaterThan(0);
+          expect(res.properties[0].versions).toBeDefined();
         }, function error() {
           fail('should not reject the promise');
         })

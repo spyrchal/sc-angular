@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.6.1
+ * @license sc-angular v0.6.2
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -115,9 +115,9 @@
 })();
 
 (function () {
-    var PATH_ATTRIBUTES = 'attributes',
-        PATH_ENTITIES = 'entities',
+    var PATH_ENTITIES = 'entities',
         PATH_GROUPS = 'groups',
+        PATH_PROPERTIES = 'properties',
         PATH_USERS = 'users',
         PATH_TYPES = 'types',
         PATH_WORKSPACES = 'workspaces';
@@ -428,22 +428,25 @@
                 var path = angular.isString(workspaceId) ? PATH_WORKSPACES + '/' + workspaceId + '/' + PATH_TYPES : PATH_TYPES;
                 
                 genericFind(auth, path).then(function resolveTypes(resTypes) {
-                    if (!options.includeAttributes) {
+                    if (!options.includeDetails) {
                         return resolve(resTypes);
                     }
                     
-                    // resolve attributes (which may lead to a significant number of API calls)
                     var promises = [], currTypeId;
+                    var findOneOptions = { resolveProperties: options.resolveProperties };
                     for (var i = 0; i < resTypes.length; i++) {
                         currTypeId = resTypes[i].uid.split('/')[1];
-                        promises.push(findTypeAttributes(auth, currTypeId));
+                        promises.push(findOneType(auth, currTypeId, findOneOptions));
                     }
 
-                    $q.all(promises).then(function resolveAttributesOfTypes(attributeCollection) {
-                        for (i = 0; i < resTypes.length; i++) {
-                            resTypes[i].attributes = attributeCollection[i];
+                    $q.all(promises).then(function (types) {
+                        // findOneType may return null - see impl below; drop these elements
+                        for (i = 0; i < types.length; i++) {
+                            if (types[i] === null) {
+                                types.splice(i, 1);
+                            }
                         }
-                        return resolve(resTypes);
+                        return resolve(types);
                     }, reject);
                 }, reject);
             });
@@ -460,33 +463,57 @@
                 if (err) { return reject(err); }
                 
                 genericFindOne(auth, PATH_TYPES, typeId).then(function (resType) {
-                    if (!options.includeAttributes) {
+                    if (!options.resolveProperties || resType.properties.length === 0) {
                         return resolve(resType);
                     }
                     
-                    console.log('findOneType id', typeId);
-                    
-                    // resolve attributes
-                    findTypeAttributes(auth, typeId).then(function resolveTypeAttributes(attributes) {
-                        resType.attributes = attributes;
+                    // resolve properties
+                    resolveProperties(auth, resType.properties).then(function resolveTypeProperties(properties) {
+                        resType.properties = properties;
                         return resolve(resType);
                     }, reject);
+                }, function (err) {
+                    if (err.data && err.data.cause === 'ClassCastException') {
+                        // workaround; see https://bitbucket.org/sebischair/sociocortex/issues/29/getting-a-specific-type-revalyxdsnhn
+                        return resolve(null);
+                    } else {
+                        return reject(err);
+                    }
+                });
+            });
+        }
+        
+        function resolveProperties(auth, properties) {
+            return $q(function performResolveProperties(resolve, reject) {
+                var promises = [], propertyId;
+                for (var i = 0; i < properties.length; i++) {
+                    propertyId = properties[i].uid.split('/')[1];
+                    promises.push(resolveProperty(auth, propertyId));
+                }
+                $q.all(promises).then(function (properties) {
+                    // resolveProperty may return null - see impl below; drop these elements
+                    for (i = 0; i < properties.length; i++) {
+                        if (properties[i] === null) {
+                            properties.splice(i, 1);
+                        }
+                    }
+                    return resolve(properties);
                 }, reject);
             });
         }
         
-        function findTypeAttributes(auth, typeId) {
-            return $q(function performFindTypeAttributes(resolve, reject) {
+        function resolveProperty(auth, propertyId) {
+            return $q(function performResolveProperty(resolve, reject) {
                 scCore.scRequest({
                     httpMethod: 'GET',
-                    path: PATH_TYPES + '/' + typeId + '/' + PATH_ATTRIBUTES,
+                    path: PATH_PROPERTIES + '/' + propertyId,
                     auth: auth
                 }).then(function (res) {
                     return resolve(res.data);
                 }, function (err) {
                     if (err.data && err.data.cause === 'NullPointerException') {
-                        // assume that there just aren't any attributes
-                        return resolve([]);
+                        // some types seem to include dead property references. return null in these cases.
+                        return resolve(null);
                     } else {
                         return reject(err);
                     }
