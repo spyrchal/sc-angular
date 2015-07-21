@@ -336,7 +336,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, 20000); // increase timeout to 20s; this might take some time
     });
     
     describe('#findOne', function () {
@@ -422,6 +422,21 @@ describe('scCrud', function () {
           expect(res.length).toBeGreaterThan(0);
           expect(res[0].uid).toEqual(jasmine.any(String));
           expect(res[0].name).toEqual(jasmine.any(String));
+        }, function error() {
+          fail('should not reject the promise');
+        })
+        .finally(done);
+      });
+    });
+    
+    describe('#findOne', function () {
+      it('returns a workspace if passed valid auth details', function (done) {
+        scCrud.workspaces
+        .findOne(auth, validWorkspaceId)
+        .then(function success(res) {
+          expect(res).toBeDefined();
+          expect(angular.isArray(res)).toBe(false);
+          expect(res.uid).toEqual('workspaces/' + validWorkspaceId);
         }, function error() {
           fail('should not reject the promise');
         })

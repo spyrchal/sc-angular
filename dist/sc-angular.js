@@ -1,5 +1,5 @@
 /**
- * @license sc-angular v0.6.2
+ * @license sc-angular v0.6.3
  * (c) 2015 Sebis
  * License: Sebis Proprietary
  * https://bitbucket.org/sebischair/sc-angular
@@ -144,7 +144,8 @@
                 findOne: findOneType
             },
             workspaces: {
-                findAll: findAllWorkspaces
+                findAll: findAllWorkspaces,
+                findOne: findOneWorkspace
             }
         };
         
@@ -525,6 +526,10 @@
         // WORKSPACES
         function findAllWorkspaces(auth) {
             return genericFind(auth, PATH_WORKSPACES);
+        }
+        
+        function findOneWorkspace(auth, workspaceId) {
+            return genericFindOne(auth, PATH_WORKSPACES, workspaceId);
         }
         
         
