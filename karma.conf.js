@@ -62,8 +62,8 @@ module.exports = function(config) {
     browsers: ['PhantomJS'],
 
     // fix phantom binding issues
-    usePolling: true,
-    transports: ['xhr-polling', 'jsonp-polling'],
+    // usePolling: true,
+    // transports: ['xhr-polling', 'jsonp-polling'],
 
 
     // Continuous Integration mode
