@@ -4,6 +4,8 @@
 /* global inject */
 /* global ngMidwayTester */
 
+var MAX_TIME_MS = 25000;
+
 describe('scCrud', function () {
   var tester, scCrud, auth,
       validWorkspaceId, validTypeId, validEntityId, validEntityData,
@@ -56,7 +58,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('includes version and attribute details if option includeDetails is set true', function (done) {
         scCrud.entities
@@ -74,7 +76,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('includes applies scUtils#unwrapAttributes if option unwrap is set true', function (done) {
         scCrud.entities
@@ -90,7 +92,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('resolves references in attributes if option resolveReferences is set true', function (done) {
         scCrud.entities
@@ -106,7 +108,7 @@ describe('scCrud', function () {
         })
         .finally(done);
       });
-    });
+    }, MAX_TIME_MS);
     
     // not yet provided by the API
     describe('#findOne', function () {
@@ -121,7 +123,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('recursively resolves all link references if option resolveReferences is set true', function (done) {
         scCrud.entities
@@ -172,7 +174,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
     
     var previouslyCreatedEntity;
@@ -198,7 +200,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
     
     describe('#update', function () {
@@ -221,7 +223,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
 
       it('supports the unwrapped attribute notation', function (done) {
         expect(previouslyCreatedEntity).toBeDefined();
@@ -244,7 +246,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
     
     describe('#remove', function () {
@@ -258,7 +260,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
   });
   
@@ -274,7 +276,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
   });
     
@@ -290,7 +292,7 @@ describe('scCrud', function () {
           expect(err.message).toEqual(jasmine.any(String));
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('returns returns an array of objects if passed valid auth details', function (done) {
         scCrud.types
@@ -303,7 +305,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
       
       it('returns returns an enriched array of objects if the flags includeDetails & resolveProperties are set', function (done) {
         scCrud.types
@@ -336,7 +338,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      }, 20000); // increase timeout to 20s; this might take some time
+      }, MAX_TIME_MS); // increase timeout to 20s; this might take some time
     });
     
     describe('#findOne', function () {
@@ -350,7 +352,7 @@ describe('scCrud', function () {
           expect(err.message).toEqual(jasmine.any(String));
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
 
       it('includes an array of resolved properties if option resolveProperties is true', function (done) {
         scCrud.types
@@ -365,7 +367,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
   });
   
@@ -389,7 +391,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
     
     describe('#findSelf', function () {
@@ -407,7 +409,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
   });
   
@@ -426,7 +428,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
     
     describe('#findOne', function () {
@@ -441,7 +443,7 @@ describe('scCrud', function () {
           fail('should not reject the promise');
         })
         .finally(done);
-      });
+      }, MAX_TIME_MS);
     });
   });
 });

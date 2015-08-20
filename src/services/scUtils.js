@@ -72,6 +72,7 @@
                     var sampleValue = values[0];
                     
                     if (sampleValue === undefined) {
+                        attribute.type = 'link'; // assume type link if there are no values
                         attribute.values = [];
                     } else if (angular.isDate(sampleValue)) {
                         for (var j = 0; j < values.length; j++) {

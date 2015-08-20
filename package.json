@@ -1,6 +1,6 @@
 {
   "name": "sc-angular",
-  "version": "0.6.3",
+  "version": "0.6.4",
   "description": "A module for interacting with the SocioCortex backend",
   "repository": {
     "type": "git",
